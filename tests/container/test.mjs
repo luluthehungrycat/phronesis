@@ -120,7 +120,7 @@ async function testModuleParsing() {
     const tool = hooks.tool['skill-feedback'];
     assert(typeof tool.description === 'string', 'skill-feedback must have description');
     assert(typeof tool.execute === 'function', 'skill-feedback must have execute function');
-    assert(tool.description.includes('rating'), 'description must mention rating');
+    assert(tool.description.includes('feedback'), 'description must mention feedback');
   });
 
   // 1.6 Test tool.execute.after tracking logic
@@ -471,7 +471,7 @@ async function testSkillFileSystem() {
 
     const parsed = JSON.parse(result);
     assert(parsed.success === false, 'should fail for non-existent skill');
-    assert(parsed.message.includes('not found'), 'message should indicate not found');
+    assert(parsed.message.includes('No skill named'), 'message should indicate not found');
   });
 
   // --- 3.8 Skill feedback ---
@@ -543,7 +543,7 @@ async function testSkillFileSystem() {
 
     const parsed = JSON.parse(result);
     assert(parsed.success === false, 'should fail for non-existent skill');
-    assert(parsed.message.includes('not found'), 'message should indicate not found');
+    assert(parsed.message.includes('No skill named'), 'message should indicate not found');
   });
 
   rmSync(tmpDir, { recursive: true, force: true });

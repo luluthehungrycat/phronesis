@@ -459,27 +459,27 @@ export default async function plugin(ctx) {
           }
 
           const ff = feedbackFilePath(worktree, args.name);
-          let feedback = [];
+          let feedbackList = [];
           if (fs.existsSync(ff)) {
             try {
-              feedback = JSON.parse(fs.readFileSync(ff, "utf-8"));
-              if (!Array.isArray(feedback)) feedback = [];
+              const stored = JSON.parse(fs.readFileSync(ff, "utf-8"));
+              feedbackList = Array.isArray(stored.feedback) ? stored.feedback : [];
             } catch { /* reset */ }
           }
 
-          feedback.push({
+          feedbackList.push({
             score: args.score,
             comment: args.comment || "",
             timestamp: new Date().toISOString(),
           });
 
-          const scores = feedback.map((f) => f.score);
+          const scores = feedbackList.map((f) => f.score);
           const average = scores.reduce((a, b) => a + b, 0) / scores.length;
           const total = scores.length;
 
           // Store feedback + computed aggregate
           fs.writeFileSync(ff, JSON.stringify({
-            feedback,
+            feedback: feedbackList,
             averageScore: average,
             totalRatings: total,
             lastRated: new Date().toISOString(),
