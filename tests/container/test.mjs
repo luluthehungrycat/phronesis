@@ -638,11 +638,201 @@ async function testSystemTransform() {
 }
 
 // ───────────────────────────────────────────────────────────
-// Section 5: OpenCode Binary Integration
+// Section 5: Persona Plugin Tests
+// ───────────────────────────────────────────────────────────
+
+async function testPersonaPlugin() {
+  console.log('\n🧑 Section 5: Persona Plugin Tests');
+  console.log('──────────────────────────────────────────');
+
+  const tmpDir = join(tmpdir(), 'phronesis-persona-' + Date.now());
+
+  // --- 5.1 Module imports ---
+  await testAsync('persona module imports as ESM', async () => {
+    const mod = await import(join(__dirname, '..', '..', 'src', 'persona', 'index.js'));
+    assert(typeof mod.default === 'function', 'default export must be a function');
+  });
+
+  // --- 5.2 Plugin structure ---
+  await testAsync('persona returns hooks with expected shape', async () => {
+    const mod = await import(join(__dirname, '..', '..', 'src', 'persona', 'index.js'));
+    const hooks = await mod.default({ worktree: tmpDir });
+
+    assert(hooks !== null && typeof hooks === 'object', 'hooks must be an object');
+    assert(typeof hooks.tool === 'object', 'must register tools');
+    assert(typeof hooks['experimental.chat.system.transform'] === 'function', 'must have system.transform hook');
+    assert(typeof hooks['experimental.chat.messages.transform'] === 'function', 'must have messages.transform hook');
+    assert(typeof hooks.config === 'function', 'must have config hook');
+  });
+
+  // --- 5.3 All persona tools registered ---
+  await testAsync('persona registers all 6 tools', async () => {
+    const mod = await import(join(__dirname, '..', '..', 'src', 'persona', 'index.js'));
+    const hooks = await mod.default({ worktree: tmpDir });
+
+    const expectedTools = ['get-persona', 'set-persona', 'edit-persona', 'import-soul', 'export-soul', 'reset-persona'];
+    for (const name of expectedTools) {
+      assert(hooks.tool[name] !== undefined, `${name} tool must be registered`);
+      assert(typeof hooks.tool[name].execute === 'function', `${name} must have execute function`);
+    }
+  });
+
+  // --- 5.4 Default persona when no PERSONA.md ---
+  await testAsync('get-persona returns default persona when no file exists', async () => {
+    const mod = await import(join(__dirname, '..', '..', 'src', 'persona', 'index.js'));
+    const hooks = await mod.default({ worktree: tmpDir });
+
+    const result = await hooks.tool['get-persona'].execute({}, {});
+    const parsed = JSON.parse(result);
+
+    assert(parsed.name === 'Default Assistant', `name should be default, got: ${parsed.name}`);
+    assert(parsed.source === 'default (no PERSONA.md file found)', 'source should indicate default');
+    assert(parsed.identity.role === 'coding assistant', 'should have default role');
+    assert(Array.isArray(parsed.constraints), 'constraints must be an array');
+    assert(parsed.constraints.length > 0, 'must have constraints');
+    assert(Array.isArray(parsed.triggers), 'triggers must be an array');
+    assert(parsed.triggers.length > 0, 'must have triggers');
+  });
+
+  // --- 5.5 set-persona creates persona ---
+  await testAsync('set-persona creates PERSONA.md with correct values', async () => {
+    const mod = await import(join(__dirname, '..', '..', 'src', 'persona', 'index.js'));
+    const hooks = await mod.default({ worktree: tmpDir });
+
+    const result = await hooks.tool['set-persona'].execute({
+      persona: JSON.stringify({
+        name: 'Expert Tester',
+        identity: {
+          role: 'testing specialist',
+          expertise: ['unit tests', 'integration tests', 'e2e'],
+          traits: ['meticulous', 'patient'],
+        },
+        behavior: {
+          communication_style: 'friendly',
+          verbosity: 'detailed',
+          formality: 'casual',
+        },
+        constraints: ['Always write tests first', 'Never skip edge cases'],
+        triggers: [{ name: 'regression', when: 'existing tests break', action: 'Run full suite' }],
+      }),
+    }, {});
+
+    const parsed = JSON.parse(result);
+    assert(parsed.success === true, 'set-persona should succeed');
+    assert(parsed.name === 'Expert Tester', `name should match, got: ${parsed.name}`);
+
+    // Verify file was written
+    const personaFilePath = join(tmpDir, '.opencode', 'persona', 'PERSONA.md');
+    assert(existsSync(personaFilePath), 'PERSONA.md must exist on disk');
+
+    const content = readFileSync(personaFilePath, 'utf-8');
+    assert(content.includes('name: "Expert Tester"') || content.includes('name: Expert Tester'), 'file must contain name');
+    assert(content.includes('friendly'), 'file must contain communication style');
+    assert(content.includes('Always write tests first'), 'file must contain constraints');
+    assert(content.includes('regression'), 'file must contain triggers');
+    assert(content.startsWith('---\n'), 'should start with frontmatter delimiter');
+  });
+
+  // --- 5.6 edit-persona changes specific fields ---
+  await testAsync('edit-persona changes specific fields', async () => {
+    const mod = await import(join(__dirname, '..', '..', 'src', 'persona', 'index.js'));
+    const hooks = await mod.default({ worktree: tmpDir });
+
+    // Change just the name
+    const result = await hooks.tool['edit-persona'].execute({
+      name: 'Senior Tester',
+      'behavior.verbosity': 'concise',
+    }, {});
+
+    const parsed = JSON.parse(result);
+    assert(parsed.success === true, 'edit-persona should succeed');
+    assert(parsed.name === 'Senior Tester', 'name should be updated');
+
+    // Verify via get-persona
+    const getResult = await hooks.tool['get-persona'].execute({}, {});
+    const persona = JSON.parse(getResult);
+    assert(persona.name === 'Senior Tester', 'name should be updated in get');
+    // Original role should be preserved (we only changed name + verbosity)
+    assert(persona.identity.role === 'testing specialist', 'un-edited fields should be preserved');
+    // Verbosity changed from detailed → concise
+    assert(persona.behavior.verbosity === 'concise', 'verbosity should be updated');
+    // Communication style should remain friendly (not touched)
+    assert(persona.behavior.communication_style === 'friendly', 'other behavior fields preserved');
+  });
+
+  // --- 5.7 reset-persona ---
+  await testAsync('reset-persona removes file and reverts to defaults', async () => {
+    const mod = await import(join(__dirname, '..', '..', 'src', 'persona', 'index.js'));
+    const hooks = await mod.default({ worktree: tmpDir });
+
+    const result = await hooks.tool['reset-persona'].execute({}, {});
+    const parsed = JSON.parse(result);
+    assert(parsed.success === true, 'reset should succeed');
+    assert(parsed.message.includes('reset to defaults'), 'message should confirm reset');
+
+    // Verify file no longer exists
+    const personaFilePath = join(tmpDir, '.opencode', 'persona', 'PERSONA.md');
+    assert(!existsSync(personaFilePath), 'PERSONA.md should be deleted');
+
+    // Verify get returns defaults
+    const getResult = await hooks.tool['get-persona'].execute({}, {});
+    const persona = JSON.parse(getResult);
+    assert(persona.name === 'Default Assistant', 'should revert to default name');
+    assert(persona.source.includes('default'), 'should indicate default source');
+  });
+
+  // --- 5.8 System transform injects persona guidance ---
+  await testAsync('persona system.transform injects persona identity', async () => {
+    // First set a persona
+    const mod = await import(join(__dirname, '..', '..', 'src', 'persona', 'index.js'));
+    const hooks = await mod.default({ worktree: tmpDir });
+
+    await hooks.tool['set-persona'].execute({
+      persona: JSON.stringify({ name: 'TestBot', identity: { role: 'code reviewer' } }),
+    }, {});
+
+    // Now check system transform
+    const xfrm = hooks['experimental.chat.system.transform'];
+    const input = { messages: [{ role: 'user', content: 'hello' }] };
+    const output = { system: [] };
+
+    await xfrm(input, output);
+
+    const text = output.system.join('\n');
+    assert(text.includes('TestBot'), 'must inject persona name');
+    assert(text.includes('code reviewer'), 'must inject role');
+    assert(text.includes('Operational Constraints'), 'must include constraints section');
+    assert(text.includes('Communication Style'), 'must include communication style');
+    assert(text.includes('Situational Triggers'), 'must include triggers');
+  });
+
+  // --- 5.9 Persona messages.transform runs without throwing ---
+  await testAsync('persona messages.transform runs without error', async () => {
+    const mod = await import(join(__dirname, '..', '..', 'src', 'persona', 'index.js'));
+    const hooks = await mod.default({ worktree: tmpDir });
+
+    const xfrm = hooks['experimental.chat.messages.transform'];
+    const input = {
+      messages: [
+        { role: 'assistant', content: 'Hello' },
+        { role: 'user', content: 'Hi, can you help?' },
+      ],
+    };
+    const output = { messages: [...input.messages] };
+
+    // Should not throw
+    await xfrm(input, output);
+  });
+
+  rmSync(tmpDir, { recursive: true, force: true });
+}
+
+// ───────────────────────────────────────────────────────────
+// Section 6: OpenCode Binary Integration
 // ───────────────────────────────────────────────────────────
 
 async function testOpenCodeIntegration() {
-  console.log('\n🚀 Section 5: OpenCode Integration');
+  console.log('\n🚀 Section 6: OpenCode Integration');
   console.log('──────────────────────────────────────────');
 
   await testAsync('opencode binary is available', async () => {
@@ -784,6 +974,7 @@ async function main() {
     await testFTS5Search();
     await testSkillFileSystem();
     await testSystemTransform();
+    await testPersonaPlugin();
     await testOpenCodeIntegration();
   } catch (e) {
     console.log(`\n💥 Unexpected test error: ${e.message}`);

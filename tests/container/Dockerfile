@@ -35,6 +35,7 @@ COPY .dockerignore .dockerignore
 # Install plugin dependencies (native compilation happens here)
 RUN cd src/skill-creator && npm install 2>&1 | tail -5 && cd ../..
 RUN cd src/session-search && npm install 2>&1 | tail -5 && cd ../..
+RUN cd src/persona && npm install 2>&1 | tail -5 && cd ../..
 
 # Prepare default skills directory
 RUN mkdir -p .opencode/skills /test-data
