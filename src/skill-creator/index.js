@@ -97,7 +97,7 @@ function scanSkills(worktree) {
  * - Injects skill-creation awareness into the system prompt
  */
 export default async function plugin(ctx) {
-  const worktree = ctx.worktree;
+  const worktree = ctx?.worktree || ctx?.project?.worktree || process.cwd();
 
   return {
       // ── Track tool execution for complexity metrics ──

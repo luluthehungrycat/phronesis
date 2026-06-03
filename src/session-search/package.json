@@ -1,0 +1,13 @@
+{
+  "name": "opencode-session-search",
+  "version": "0.1.0",
+  "description": "FTS5 full-text search across past OpenCode sessions with LLM-summarized results",
+  "type": "module",
+  "main": "index.js",
+  "keywords": ["opencode", "plugin", "search", "fts5", "memory"],
+  "license": "MIT",
+  "dependencies": {
+    "@opencode-ai/plugin": "^1.14.0",
+    "zod": "^3.22.0"
+  }
+}
