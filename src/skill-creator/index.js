@@ -1,6 +1,7 @@
 import { tool } from "@opencode-ai/plugin";
 import fs from "node:fs";
 import path from "node:path";
+import { getTelegramConfig, sendTelegramNotification } from "../shared/telegram.js";
 
 // ---------------------------------------------------------------------------
 // Per-session complexity tracking state
@@ -175,6 +176,7 @@ ${toolsList}
 // ---------------------------------------------------------------------------
 export default async function plugin(ctx) {
   const worktree = ctx?.worktree || ctx?.project?.worktree || process.cwd();
+  const tgConfig = getTelegramConfig(ctx?.config);
 
   return {
     // ── Track tool execution for complexity metrics ──
@@ -343,9 +345,16 @@ export default async function plugin(ctx) {
 
           const action = existing ? "Updated" : "Created";
 
+          // Fire-and-forget Telegram notification
+          sendTelegramNotification(
+            `<b>${action === "Created" ? "🧠" : "🔄"} Skill ${action}</b>\n` +
+            `<code>${normalizedName}</code>\n${args.description || args.trigger || ""}`,
+            tgConfig
+          ).catch(() => {});
+
           return JSON.stringify({
             success: true,
-            action,  // "Created" or "Updated"
+            action,
             path: `${SKILLS_DIR}/${normalizedName}/SKILL.md`,
             message:
               `${action} skill '${normalizedName}'. ` +
@@ -414,6 +423,12 @@ export default async function plugin(ctx) {
 
           const newContent = generateSkillContent(merged);
           fs.writeFileSync(sf, newContent, "utf-8");
+
+          // Fire-and-forget Telegram notification
+          sendTelegramNotification(
+            `<b>🔄 Skill Updated</b>\n<code>${args.name}</code>`,
+            tgConfig
+          ).catch(() => {});
 
           return JSON.stringify({
             success: true,
@@ -495,6 +510,17 @@ export default async function plugin(ctx) {
             totalRatings: total,
             lastRated: new Date().toISOString(),
           }, null, 2), "utf-8");
+
+          // Fire-and-forget Telegram notification on significant milestones
+          const milestone = total === 1 || total === 5 || total === 10 || total % 10 === 0;
+          if (milestone) {
+            sendTelegramNotification(
+              `<b>⭐ Skill Rated</b>\n<code>${args.name}</code> — ${args.score}/5\n` +
+              `Average: ${average.toFixed(1)}/5 from ${total} rating${total === 1 ? "" : "s"}` +
+              (args.comment ? `\n\nComment: ${args.comment}` : ""),
+              tgConfig
+            ).catch(() => {});
+          }
 
           return JSON.stringify({
             success: true,

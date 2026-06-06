@@ -3,6 +3,7 @@ import { createRequire } from "node:module";
 import fs from "node:fs";
 import path from "node:path";
 import { homedir } from "node:os";
+import { getTelegramConfig, sendTelegramNotification } from "../shared/telegram.js";
 
 const require = createRequire(import.meta.url);
 
@@ -260,6 +261,8 @@ export default async function plugin(ctx) {
     if (ctx.config.max_facts_in_context) pluginConfig.max_facts_in_context = ctx.config.max_facts_in_context;
   }
 
+  const tgConfig = getTelegramConfig(ctx?.config);
+
   startHeartbeat();
 
   // Clean up heartbeat on plugin unload (best-effort)
@@ -313,6 +316,15 @@ export default async function plugin(ctx) {
             "Consider using `consolidate-memory` to extract durable facts from recent sessions."
           );
           parts.push("");
+
+          // Fire-and-forget Telegram alert (throttled via overdue flag — only fires once per interval)
+          sendTelegramNotification(
+            `<b>🔔 Consolidation Overdue</b>\n` +
+            `${unconsolidated} session(s) unconsolidated. ` +
+            `Interval: ${pluginConfig.consolidation_interval_hours}h. ` +
+            `Use \`consolidate-memory\` to extract knowledge.`,
+            tgConfig
+          ).catch(() => {});
         }
 
         // Inject relevant facts into context
@@ -409,6 +421,13 @@ export default async function plugin(ctx) {
               session_id: args.source_session,
             });
 
+            // Fire-and-forget Telegram notification
+            sendTelegramNotification(
+              `<b>💾 Fact ${existing ? "Updated" : "Stored"}</b>\n` +
+              `[${args.category}] ${args.content.slice(0, 200)}`,
+              tgConfig
+            ).catch(() => {});
+
             return JSON.stringify({
               success: true,
               action: existing ? "updated" : "created",
@@ -472,6 +491,12 @@ export default async function plugin(ctx) {
             });
 
             const count = tx(items);
+
+            // Fire-and-forget Telegram notification
+            sendTelegramNotification(
+              `<b>📝 Observations Stored</b>\n${count} observation(s) on topic "${args.topic}"`,
+              tgConfig
+            ).catch(() => {});
 
             return JSON.stringify({
               success: true,
@@ -695,6 +720,16 @@ export default async function plugin(ctx) {
             // but we provide the session list to the agent which can
             // explore them using other tools if needed
 
+            // Fire-and-forget Telegram notification
+            if (sessions.length > 0) {
+              sendTelegramNotification(
+                `<b>🔔 Consolidation Needed</b>\n` +
+                `${sessions.length} unconsolidated session(s) found.\n` +
+                `Use \`consolidate-memory\` then \`add-fact\` to extract knowledge.`,
+                tgConfig
+              ).catch(() => {});
+            }
+
             return JSON.stringify({
               success: true,
               run_id: Number(runId),
@@ -749,6 +784,12 @@ export default async function plugin(ctx) {
             `).run(count);
 
             consolidationOverdue = false;
+
+            // Fire-and-forget Telegram notification
+            sendTelegramNotification(
+              `<b>✅ Consolidation Complete</b>\n${count} session(s) marked as consolidated.`,
+              tgConfig
+            ).catch(() => {});
 
             return JSON.stringify({
               success: true,
