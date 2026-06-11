@@ -1,7 +1,6 @@
 import { tool } from '@opencode-ai/plugin';
-import { z } from 'zod';
 import { execSync } from 'child_process';
-import { join, dirname, basename } from 'path';
+import { join, dirname } from 'path';
 import { homedir } from 'os';
 import { existsSync, mkdirSync } from 'fs';
 import { getTelegramConfig, sendTelegramNotification } from "../shared/telegram.js";
@@ -194,45 +193,47 @@ function searchIndex(query, limit = 10) {
 // Plugin entrypoint
 // ---------------------------------------------------------------------------
 
-export default function (ctx) {
-  const tgConfig = getTelegramConfig(ctx?.config);
+export default {
+  server: async () => {
+    const tgConfig = getTelegramConfig();
 
-  return {
-    tool: [
-      tool({
-        name: 'search-sessions',
-        description: `Search past OpenCode sessions by natural language query.
+    return {
+      tool: {
+        'search-sessions': tool({
+          description: `Search past OpenCode sessions by natural language query.
 Returns relevant session excerpts with session IDs, titles, and matching text snippets.
 Use this when you need to recall how something was done before, find past solutions,
 or reference previous work.`,
-        args: {
-          query: z.string().describe('Natural language search query (e.g. "how to set up auth middleware", "docker compose deployment")'),
-          limit: z.number().optional().default(5).describe('Maximum number of results to return (default: 5, max: 20)'),
-        },
-        execute: async ({ query, limit }) => {
-          const results = searchIndex(query, Math.min(limit || 5, 20));
+          args: {
+            query: tool.schema.string().describe('Natural language search query (e.g. "how to set up auth middleware", "docker compose deployment")'),
+            limit: tool.schema.number().optional().default(5).describe('Maximum number of results to return (default: 5, max: 20)'),
+          },
+          async execute(args) {
+            const { query, limit } = args;
+            const results = searchIndex(query, Math.min(limit || 5, 20));
 
-          if (results.length === 0) {
-            return `No sessions found matching "${query}". Try different keywords or check that the session search index has been built (it updates automatically).`;
-          }
+            if (results.length === 0) {
+              return `No sessions found matching "${query}". Try different keywords or check that the session search index has been built (it updates automatically).`;
+            }
 
-          if (tgConfig) {
-            sendTelegramNotification(`<b>🔍 Session Search</b>\n<code>${query}</code>\n${results.length} result(s) found`, tgConfig).catch(() => {});
-          }
+            if (tgConfig) {
+              sendTelegramNotification(`<b>🔍 Session Search</b>\n<code>${query}</code>\n${results.length} result(s) found`, tgConfig).catch(() => {});
+            }
 
-          let output = `## Session Search Results\n\n**Query:** ${query}\n\nFound ${results.length} matching session(s):\n\n`;
-          for (let i = 0; i < results.length; i++) {
-            const r = results[i];
-            output += `### ${i + 1}. ${r.session_title}\n`;
-            output += `**Session ID:** \`${r.session_id}\`\n`;
-            output += `**Relevance:** ${(r.rank !== undefined && r.rank !== null) ? r.rank.toFixed(4) : 'N/A'}\n`;
-            output += `**Match:** ${r.snippet_text}\n\n`;
-          }
+            let output = `## Session Search Results\n\n**Query:** ${query}\n\nFound ${results.length} matching session(s):\n\n`;
+            for (let i = 0; i < results.length; i++) {
+              const r = results[i];
+              output += `### ${i + 1}. ${r.session_title}\n`;
+              output += `**Session ID:** \`${r.session_id}\`\n`;
+              output += `**Relevance:** ${(r.rank !== undefined && r.rank !== null) ? r.rank.toFixed(4) : 'N/A'}\n`;
+              output += `**Match:** ${r.snippet_text}\n\n`;
+            }
 
-          output += `Use \`/search-sessions\` with a different query to refine results.`;
-          return output;
-        },
-      }),
-    ],
-  };
-}
+            output += `Use \`/search-sessions\` with a different query to refine results.`;
+            return output;
+          },
+        }),
+      },
+    };
+  },
+};
