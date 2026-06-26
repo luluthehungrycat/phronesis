@@ -1,63 +1,85 @@
 # ───────────────────────────────────────────────────────────
-# Phronesis serve-2 Container
-# Isolated OpenCode server with all Phronesis plugins loaded
+# Phronesis — Containerized OpenCode server with plugins
+#
+# Base: ghcr.io/anomalyco/opencode (Alpine Linux + opencode binary)
+# Build:  podman build -t phronesis:latest .
+# Run:    podman run --rm -p 4097:4097 -v phronesis-data:/data phronesis:latest
 # ───────────────────────────────────────────────────────────
-FROM docker.io/node:22-bookworm-slim AS build
+FROM ghcr.io/anomalyco/opencode:latest
 
-RUN apt-get update && apt-get install -y \
-    python3 make g++ git curl jq sqlite3 \
-    && rm -rf /var/lib/apt/lists/*
+# ── Install runtime dependencies ──────────────────────────
+# bash        — for entrypoint script
+# nodejs npm  — for Phronesis plugin runtime (opencode plugins load via Node.js)
+# git curl jq — utilities used by plugins
+# sqlite      — for session-search plugin and diagnostics (package: sqlite on Alpine)
+# python3 make g++ — build tools for native Node modules (better-sqlite3)
+RUN apk add --no-cache \
+    bash \
+    nodejs \
+    npm \
+    git \
+    gh \
+    curl \
+    jq \
+    sqlite \
+    python3 \
+    make \
+    g++ \
+    && rm -rf /var/cache/apk/*
 
-# Download OpenCode CLI binary from GitHub releases
-RUN OPENCODE_VERSION=$(curl -sL https://api.github.com/repos/anomalyco/opencode/releases/latest | \
-    grep '"tag_name"' | sed 's/.*"v\([^"]*\)".*/\1/') && \
-    echo "OpenCode version: $OPENCODE_VERSION" && \
-    curl -fsSL "https://github.com/anomalyco/opencode/releases/latest/download/opencode-linux-x64.tar.gz" \
-    -o /tmp/opencode.tar.gz && \
-    tar xzf /tmp/opencode.tar.gz -C /usr/local/bin/ opencode && \
-    rm /tmp/opencode.tar.gz && \
-    opencode --version
+# ── Install Phronesis CLI globally ───────────────────────
+# Install deps first, then the package itself, so changes to JS source don't
+# trigger a full npm rebuild.
+COPY cli/package.json cli/package-lock.json* /phronesis/cli/
+RUN cd /phronesis/cli && npm install 2>&1 | tail -5
 
-WORKDIR /phronesis
+COPY cli/ /phronesis/cli/
+RUN cd /phronesis/cli && npm install -g . 2>&1 | tail -5
 
-# Copy plugins and install dependencies (native compilation)
-COPY src/shared/ ./src/shared/
-COPY src/skill-creator/ ./src/skill-creator/
-COPY src/session-search/ ./src/session-search/
-COPY src/persona/ ./src/persona/
-COPY src/memory-consolidation/ ./src/memory-consolidation/
-COPY src/remote-execution/ ./src/remote-execution/
-COPY src/skill-lifecycle/ ./src/skill-lifecycle/
-COPY src/user-profiling/ ./src/user-profiling/
+# ── Copy plugin sources ──────────────────────────────────
+# Separate shared/ from the rest since shared has no package.json
+COPY src/shared/ /phronesis/src/shared/
 
-RUN cd src/skill-creator && npm install 2>&1 | tail -3 && cd ../..
-RUN cd src/session-search && npm install 2>&1 | tail -3 && cd ../..
-RUN cd src/persona && npm install 2>&1 | tail -3 && cd ../..
-RUN cd src/memory-consolidation && npm install 2>&1 | tail -3 && npm rebuild better-sqlite3 2>&1 | tail -3 && cd ../..
-RUN cd src/remote-execution && npm install 2>&1 | tail -3 && cd ../..
-RUN cd src/skill-lifecycle && npm install 2>&1 | tail -3 && cd ../..
-RUN cd src/user-profiling && npm install 2>&1 | tail -3 && cd ../..
+# Copy the directories that contain package.json
+COPY src/skill-creator/     /phronesis/src/skill-creator/
+COPY src/session-search/    /phronesis/src/session-search/
+COPY src/persona/           /phronesis/src/persona/
+COPY src/memory-consolidation/ /phronesis/src/memory-consolidation/
+COPY src/remote-execution/  /phronesis/src/remote-execution/
+COPY src/skill-lifecycle/   /phronesis/src/skill-lifecycle/
+COPY src/user-profiling/    /phronesis/src/user-profiling/
 
-# ---- Stage 2: Runtime ----
-FROM docker.io/node:22-bookworm-slim
+# ── Install plugin dependencies ──────────────────────────
+# Each plugin has its own package.json. Native modules (better-sqlite3 in
+# memory-consolidation) are compiled on the target architecture here.
+RUN for dir in                                        \
+    /phronesis/src/skill-creator                      \
+    /phronesis/src/session-search                     \
+    /phronesis/src/persona                            \
+    /phronesis/src/memory-consolidation                \
+    /phronesis/src/remote-execution                   \
+    /phronesis/src/skill-lifecycle                    \
+    /phronesis/src/user-profiling;                    \
+do                                                     \
+    if [ -f "$dir/package.json" ]; then                \
+        echo "  → $dir" &&                             \
+        cd "$dir" && npm install 2>&1 | tail -3;       \
+    fi;                                                 \
+done
 
-RUN apt-get update && apt-get install -y \
-    curl jq sqlite3 ca-certificates git gh \
-    && rm -rf /var/lib/apt/lists/* \
-    && npm install -g better-sqlite3
+# Rebuild native modules for the target platform (better-sqlite3)
+RUN cd /phronesis/src/memory-consolidation \
+    && npm rebuild better-sqlite3 2>&1 | tail -5
 
-COPY --from=build /usr/local/bin/opencode /usr/local/bin/opencode
-COPY --from=build /phronesis /phronesis
-
+# ── Entrypoint ──────────────────────────────────────────
 COPY servers/serve-2/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh && echo "entrypoint built $(date)"
+RUN chmod +x /entrypoint.sh
 
-# Data directory for isolated opencode.db, plugin DBs
+# Persist session data, plugin databases, and skills across restarts
 VOLUME ["/data"]
 
+# OpenCode server port
 EXPOSE 4097
 
-HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
-  CMD curl --fail http://localhost:4097/ || exit 1
-
+# Override base image entrypoint (which is "opencode") with our startup script
 ENTRYPOINT ["/entrypoint.sh"]
