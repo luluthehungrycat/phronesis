@@ -97,7 +97,7 @@ For local development, symlink or point OpenCode config at the local plugin path
 {
   "plugins": [
     // "...",
-    "/home/moritz/agent/repos/phronesis/src/skill-creator"
+    "/home/user/phronesis/src/skill-creator"
   ]
 }
 ```

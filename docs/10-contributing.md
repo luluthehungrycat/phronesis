@@ -28,10 +28,10 @@ Add to `opencode.json`:
 ```json
 {
   "plugins": [
-    "file:///home/moritz/agent/repos/phronesis/src/skill-creator",
-    "file:///home/moritz/agent/repos/phronesis/src/session-search",
-    "file:///home/moritz/agent/repos/phronesis/src/persona",
-    "file:///home/moritz/agent/repos/phronesis/src/memory-consolidation"
+    "file:///home/user/phronesis/src/skill-creator",
+    "file:///home/user/phronesis/src/session-search",
+    "file:///home/user/phronesis/src/persona",
+    "file:///home/user/phronesis/src/memory-consolidation"
   ]
 }
 ```

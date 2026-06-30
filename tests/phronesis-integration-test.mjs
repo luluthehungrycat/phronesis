@@ -6,7 +6,7 @@
  * during a real opencode session (not just registered).
  *
  * Requires:
- *   - opencode binary at /home/moritz/.opencode/bin/opencode
+ *   - opencode binary (set via OPENCODE_BIN env or ~/.opencode/bin/opencode)
  *
  * Usage:
  *   node tests/phronesis-integration-test.mjs
@@ -22,16 +22,16 @@ import { fileURLToPath } from "node:url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const OPENCODE =
   process.env.OPENCODE_BIN ||
-  "/home/moritz/.opencode/bin/opencode";
+  join(process.env.HOME || "/root", ".opencode", "bin", "opencode");
 const OUTPUT_LOG = join(__dirname, "..", "test-output", "integration-run.jsonl");
 
 // The task — explicitly instructs tool use so the model has no ambiguity
 const TASK = [
-  "You are exploring the /home/moritz/agent/repos/phronesis project. Do ALL of the following:",
+  "You are exploring the phronesis project in the current workspace. Do ALL of the following:",
   "",
   "1. Use search-facts to check your memory for any facts about this project",
   "2. Use list-skills to check what skills exist",
-  "3. Read /home/moritz/agent/repos/phronesis/README.md",
+  "3. Read the README.md file at the root of the phronesis project",
   "4. Use add-fact to store 2 facts about what you learned",
   "5. Use search-sessions to find any past sessions related to phronesis",
   "6. Use memory-stats to see memory statistics",
@@ -103,7 +103,7 @@ async function runTest() {
 
   const child = spawn(OPENCODE, args, {
     stdio: ["pipe", "pipe", "pipe"],
-    env: { ...process.env, HOME: "/home/moritz" },
+    env: { ...process.env },
   });
 
   const killTimer = setTimeout(() => {

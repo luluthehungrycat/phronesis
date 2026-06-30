@@ -31,14 +31,14 @@ The Telegram gateway is powered by [`@grinev/opencode-telegram-bot`](https://git
 
 **`opencode-serve.service`** — runs the OpenCode API server:
 ```
-ExecStart=/home/moritz/.opencode/bin/opencode serve --hostname 127.0.0.1 --port 4096
-WorkingDirectory=/home/moritz/oc-srv-workspace
+ExecStart=/home/user/.opencode/bin/opencode serve --hostname 127.0.0.1 --port 4096
+WorkingDirectory=/home/user/workspace
 ```
 
 **`opencode-telegram.service`** — runs the Telegram bot client:
 ```
-ExecStart=/home/moritz/.npm-global/bin/opencode-telegram start
-WorkingDirectory=/home/moritz
+ExecStart=/home/user/.npm-global/bin/opencode-telegram start
+WorkingDirectory=/home/user
 Restart=always
 ```
 

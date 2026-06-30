@@ -8,7 +8,7 @@ import { getTelegramConfig, sendTelegramNotification } from "../shared/telegram.
 // Target resolution
 // ---------------------------------------------------------------------------
 const CONFIG_PATH = path.join(
-  process.env.HOME || "/home/moritz",
+  process.env.HOME || "/root",
   ".config/opencode/remote-execution-targets.json"
 );
 

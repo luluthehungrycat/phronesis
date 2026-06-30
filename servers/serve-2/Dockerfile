@@ -81,5 +81,7 @@ VOLUME ["/data"]
 # OpenCode server port
 EXPOSE 4097
 
+HEALTHCHECK CMD curl --fail http://localhost:4097/ || exit 1
+
 # Override base image entrypoint (which is "opencode") with our startup script
 ENTRYPOINT ["/entrypoint.sh"]

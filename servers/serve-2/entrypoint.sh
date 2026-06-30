@@ -44,8 +44,8 @@ HOST_REPOS="/host-repos"
 #    done
 #fi
 
-# Also symlink the host workspace path since opencode records it as directory
-mkdir -p /home/moritz
+# Symlink the host workspace path since opencode records it as directory
+mkdir -p "$HOME"
 ln -sfn "$WORKSPACE" $HOME/.phronesis/workspace
 
 cd "$WORKSPACE"

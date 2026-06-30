@@ -95,9 +95,9 @@ Requires=opencode-serve.service
 
 [Service]
 Type=simple
-User=moritz
-EnvironmentFile=/home/moritz/.opencode-telegram/main.env
-ExecStart=/home/moritz/.npm-global/bin/opencode-telegram start
+User=user
+EnvironmentFile=/home/user/.opencode-telegram/main.env
+ExecStart=/home/user/.npm-global/bin/opencode-telegram start
 Restart=always
 RestartSec=10
 

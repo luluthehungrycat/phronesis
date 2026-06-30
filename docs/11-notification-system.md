@@ -50,7 +50,7 @@ Priority 2 is the **recommended default** — if you already have a working Tele
 ```json
 {
   "plugins": {
-    "file:///home/moritz/agent/repos/phronesis/src/memory-consolidation": {
+    "file:///home/user/phronesis/src/memory-consolidation": {
       "config": {
         "botToken": "123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11",
         "chatId": "8582610783"
