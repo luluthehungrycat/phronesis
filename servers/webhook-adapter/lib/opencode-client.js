@@ -2,8 +2,6 @@
  * OpenCode API client.
  * Sends messages to OpenCode's REST API and returns responses.
  */
-import { fetch } from "node:http"; // unused — Node 18+ has global fetch
-// global fetch is available in Node 18+
 
 const DEFAULT_OPENCODE_URL = "http://localhost:4097";
 const REQUEST_TIMEOUT_MS = 120_000;
