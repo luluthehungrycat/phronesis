@@ -55,6 +55,7 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createServer } from "node:http";
 import express from "express";
+import rateLimit from "express-rate-limit";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -110,49 +111,16 @@ function validateUnit(unit) {
 }
 
 /**
- * Simple in-memory sliding-window rate limiter.
- * Tracks request timestamps per IP and rejects when the count exceeds
- * `maxRequests` within `windowMs`. Cleanup runs every `windowMs / 2`
- * and is `.unref()`'d so it does not keep the process alive.
- *
- * @param {number} windowMs  — time window in milliseconds
- * @param {number} maxRequests — max requests per IP per window
- * @returns {(req: import("http").IncomingMessage) => boolean}
+ * Rate-limiter for gateway endpoints — 10 requests per minute per IP.
+ * Uses express-rate-limit with standard `RateLimit-*` headers.
  */
-function createRateLimiter(windowMs, maxRequests) {
-  const hits = new Map();
-
-  const cleanup = () => {
-    const cutoff = Date.now() - windowMs;
-    for (const [key, timestamps] of hits) {
-      const recent = timestamps.filter(t => t > cutoff);
-      if (recent.length === 0) hits.delete(key);
-      else hits.set(key, recent);
-    }
-  };
-  setInterval(cleanup, Math.max(windowMs / 2, 1000)).unref();
-
-  return (req) => {
-    const ip = req.socket.remoteAddress || "unknown";
-    const now = Date.now();
-    const cutoff = now - windowMs;
-
-    let timestamps = hits.get(ip);
-    if (!timestamps) {
-      timestamps = [];
-      hits.set(ip, timestamps);
-    }
-
-    const recent = timestamps.filter(t => t > cutoff);
-    recent.push(now);
-    hits.set(ip, recent);
-
-    return recent.length <= maxRequests;
-  };
-}
-
-/** Rate-limiter for /api/gateway/:action — 10 requests per minute per IP. */
-const gatewayRateLimiter = createRateLimiter(60_000, 10);
+const gatewayRateLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { ok: false, error: "rate limit exceeded" },
+});
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -236,6 +204,9 @@ app.use(express.json());
 
 // Static files
 app.use(express.static(join(__dirname, "public")));
+
+// Rate limiter for all /api/gateway/* routes
+app.use("/api/gateway", gatewayRateLimiter);
 
 // ---- API Routes ----
 
@@ -374,13 +345,10 @@ app.get("/api/sessions/:id", (req, res) => {
   }
 });
 
-// Gateway status (units listing) — gated by loopback-origin CSRF check and
-// same per-IP rate limit as the action endpoint.
+// Gateway status (units listing) — gated by loopback-origin CSRF check.
+// Rate limiting is handled by the /api/gateway middleware (10 req/min/IP).
 app.get("/api/gateway/status", (req, res) => {
   if (!checkLoopbackOrigin(req, res)) return;
-  if (!gatewayRateLimiter(req)) {
-    return res.status(429).json({ ok: false, error: "rate limit exceeded" });
-  }
 
   try {
     const profileName = req.query.profile;
@@ -438,11 +406,9 @@ app.get("/api/gateway/status", (req, res) => {
 
 // Gateway service action — gated by the loopback-origin CSRF check and the
 // systemd unit allowlist. Validation order: origin → action → unit → spawn.
+// Rate limiting is handled by the /api/gateway middleware (10 req/min/IP).
 app.post("/api/gateway/:action", (req, res) => {
   if (!checkLoopbackOrigin(req, res)) return;
-  if (!gatewayRateLimiter(req)) {
-    return res.status(429).json({ ok: false, error: "rate limit exceeded" });
-  }
 
   const validActions = ["start", "stop", "restart", "status"];
   const action = req.params.action;
