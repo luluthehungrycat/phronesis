@@ -4,13 +4,9 @@
 // Copies existing sessions from host opencode.db to container
 // Usage: node scripts/migrate-sessions.mjs [--dry-run]
 // ───────────────────────────────────────────────────────────
-import { createRequire } from "node:module";
 import { existsSync, copyFileSync, mkdirSync } from "node:fs";
 import { homedir } from "node:os";
 import { join, resolve } from "node:path";
-
-const require = createRequire(import.meta.url);
-const { program } = require("commander") || { version: () => {}, parse: () => {} };
 
 const isDryRun = process.argv.includes("--dry-run");
 const DATA_DIR = resolve("/data/.local/share/opencode");
