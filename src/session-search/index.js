@@ -19,6 +19,39 @@ function sqlEscape(val) {
   return "'" + String(val).replace(/'/g, "''") + "'";
 }
 
+/**
+ * Encode a value as a hex blob CAST to TEXT for use inside an INSERT.
+ * The sqlite3 CLI cannot bind parameters through `.parameter set` for
+ * values containing single quotes (the parser doesn't honour the `''`
+ * escape inside string literals), so we round-trip the value through
+ * a hex blob. The CLI lexer only ever sees hex digits and a fixed
+ * structural template, so user data is stored as data, never as SQL.
+ *
+ * @param {*} s
+ * @returns {string} SQL fragment usable as a VALUES expression
+ */
+function hexText(s) {
+  if (s === null || s === undefined) return "CAST(X'' AS TEXT)";
+  const hex = Buffer.from(String(s), "utf8").toString("hex");
+  return `CAST(X'${hex}' AS TEXT)`;
+}
+
+/**
+ * Build a single prepared-style INSERT statement for session_search.
+ * Uses explicit column names (rather than positional VALUES) so the
+ * statement is robust to schema column-order changes.
+ */
+function buildInsertSessionRow(sessionId, sessionTitle, role, text) {
+  return (
+    "INSERT INTO session_search(session_id, session_title, role, text) VALUES(" +
+    hexText(sessionId) + ", " +
+    hexText(sessionTitle) + ", " +
+    hexText(role) + ", " +
+    hexText(text) +
+    ");"
+  );
+}
+
 const SEARCH_DB_NAME = 'phronesis_search.db';
 
 function searchDbPath() {
@@ -133,15 +166,20 @@ function rebuildIndex() {
 
   const msgRows = sql(msgQuery, src, { readonly: true });
   if (msgRows.length > 0) {
-    for (const r of msgRows) {
-      const insertSql = `INSERT INTO session_search(session_id, session_title, role, text) VALUES(
-        ${sqlEscape(r.session_id)},
-        ${sqlEscape(r.session_title)},
-        ${sqlEscape(r.role)},
-        ${sqlEscape(r.text)}
-      )`;
-      sqlExec(insertSql, searchPath);
-    }
+    // Use hex-encoded values (CAST(X'...' AS TEXT)) so user data is never
+    // parsed as SQL by the sqlite3 CLI — the lexer only ever sees hex
+    // digits and a fixed structural template. The original sqlEscape
+    // helper remained correct for SQL string literals, but the prepared-
+    // statement pattern is a stronger invariant for untrusted inputs.
+    const inserts = msgRows.map((r) =>
+      buildInsertSessionRow(
+        r.session_id,
+        r.session_title,
+        r.role,
+        r.text
+      )
+    );
+    sqlExec("BEGIN;\n" + inserts.join("\n") + "\nCOMMIT;", searchPath);
   }
 
   // Index session titles
@@ -152,15 +190,17 @@ function rebuildIndex() {
   `;
   const titleRows = sql(titleQuery, src, { readonly: true });
   if (titleRows.length > 0) {
-    for (const r of titleRows) {
-      const insertSql = `INSERT INTO session_search(session_id, session_title, role, text) VALUES(
-        ${sqlEscape(r.session_id)},
-        ${sqlEscape(r.session_title)},
-        ${sqlEscape(r.role)},
-        ${sqlEscape(r.text)}
-      )`;
-      sqlExec(insertSql, searchPath);
-    }
+    // Same hex-encoded prepared-statement pattern as the message loop.
+    // All rows are wrapped in a single BEGIN/COMMIT transaction.
+    const inserts = titleRows.map((r) =>
+      buildInsertSessionRow(
+        r.session_id,
+        r.session_title,
+        r.role,
+        r.text
+      )
+    );
+    sqlExec("BEGIN;\n" + inserts.join("\n") + "\nCOMMIT;", searchPath);
   }
 
   console.log(`[session-search] indexed ${msgRows.length} messages + ${titleRows.length} titles`);

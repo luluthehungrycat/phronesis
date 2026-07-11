@@ -94,9 +94,10 @@ export function searchSessions(query, opts = {}) {
     throw new Error("sqlite3/sqlite not found in PATH. Install it to use session search.");
   }
 
-  // Build FTS5 query — escape single quotes, wrap in double-quote prefix match
-  const escapedQuery = query.replace(/'/g, "''");
-  const ftsQuery = `"${escapedQuery}"*`;
+  // Sanitize FTS5 query: strict allowlist rejects FTS5 operators in untrusted input.
+  // The CLI's parameter binding can't pass user data as a real value for MATCH,
+  // so we restrict input to a safe subset and re-throw on anything else.
+  const ftsQuery = buildFtsQuery(query);
 
   const sql = [
     "SELECT session_id, session_title,",
@@ -280,6 +281,65 @@ function query(db, cmd) {
 }
 
 // ---------------------------------------------------------------------------
+// FTS5 query sanitization (strict allowlist)
+// ---------------------------------------------------------------------------
+
+// Allowed characters in an FTS5 query: letters, digits, space, underscore,
+// hyphen, asterisk, double-quote. Anything else is rejected — this includes
+// FTS5 operators (:, (, ), OR, AND, NOT, NEAR, ^) that could change the
+// meaning of the MATCH clause. If a future feature needs those operators,
+// add an explicit opt-in flag rather than relaxing this allowlist.
+const FTS5_ALLOWLIST = /^[A-Za-z0-9 _\-*"]+$/;
+
+function buildFtsQuery(rawQuery) {
+  if (typeof rawQuery !== "string" || rawQuery.length === 0) {
+    throw new Error("Search query must not be empty.");
+  }
+  if (!FTS5_ALLOWLIST.test(rawQuery)) {
+    throw new Error(
+      "Search query contains disallowed characters. " +
+        "Only letters, digits, spaces, underscores, hyphens, asterisks, and double quotes are allowed. " +
+        "FTS5 operators are not permitted in untrusted search input."
+    );
+  }
+  return `"${rawQuery}"*`;
+}
+
+// ---------------------------------------------------------------------------
+// Prepared-statement helpers (hex-encoded values)
+// ---------------------------------------------------------------------------
+//
+// The sqlite3 CLI has no API-style parameter binding for arbitrary INSERT
+// values: the `.parameter set` parser does not honour the SQL `''` escape
+// inside string literals. To keep user data out of the SQL parser entirely,
+// we encode each value as a hex blob and CAST it back to TEXT. The CLI
+// lexer only ever sees the fixed template + hex digits, so a value of
+// `it's a 'test' with UNION SELECT` is stored as data — never as SQL.
+
+function hexText(s) {
+  if (s === null || s === undefined) return "CAST(X'' AS TEXT)";
+  const hex = Buffer.from(String(s), "utf8").toString("hex");
+  return `CAST(X'${hex}' AS TEXT)`;
+}
+
+function buildInsertSessionRow(sid, title, role, text) {
+  return (
+    "INSERT INTO session_search(session_id, session_title, role, text) VALUES(" +
+    hexText(sid) + ", " +
+    hexText(title) + ", " +
+    hexText(role) + ", " +
+    hexText(text) +
+    ");"
+  );
+}
+
+function execInsertBatch(db, rows) {
+  if (rows.length === 0) return;
+  const body = rows.map((r) => buildInsertSessionRow(r.sid, r.title, r.role, r.text)).join("\n");
+  sql(db, "BEGIN;\n" + body + "\nCOMMIT;");
+}
+
+// ---------------------------------------------------------------------------
 // Index rebuild
 // ---------------------------------------------------------------------------
 
@@ -334,38 +394,44 @@ export function rebuildSearchIndex(opts = {}) {
       "ORDER BY m.time_created;"
   );
 
-  // Batch insert messages into FTS5
+  // Batch insert messages into FTS5 using hex-encoded bound values.
+  // Values are sent as X'...' blobs and CAST to TEXT — the CLI parser
+  // never sees the raw text, so a malicious value (e.g. a quote that
+  // closes the SQL string) is stored as data, not executed as SQL.
+  const MSG_BATCH_SIZE = 100;
   let batch = [];
   let msgCount = 0;
   for (const r of msgRows) {
-    const sid = r.session_id.replace(/'/g, "''");
-    const title = (r.session_title || "").replace(/'/g, "''");
-    const role = (r.role || "").replace(/'/g, "''");
-    const text = (r.text || "").replace(/'/g, "''");
-    batch.push(
-      `INSERT INTO session_search VALUES('${sid}','${title}','${role}','${text}');`
-    );
+    batch.push({
+      sid: r.session_id,
+      title: r.session_title || "",
+      role: r.role || "",
+      text: r.text || "",
+    });
     msgCount++;
-    if (batch.length >= 100) {
-      sql(dstDb, batch.join("\n"));
+    if (batch.length >= MSG_BATCH_SIZE) {
+      execInsertBatch(dstDb, batch);
       batch = [];
     }
   }
-  if (batch.length > 0) sql(dstDb, batch.join("\n"));
+  execInsertBatch(dstDb, batch);
 
-  // Extract session titles
+  // Extract session titles. The original code ran one INSERT per row
+  // (no batching, no transaction); we now wrap all rows in a single
+  // BEGIN/COMMIT transaction while keeping the per-row INSERT count.
   const titleRows = query(
     srcDb,
     "SELECT id, title FROM session WHERE title NOT LIKE 'New session%';"
   );
-  let titleCount = 0;
-  for (const r of titleRows) {
-    const t = r.title.replace(/'/g, "''");
-    sql(
-      dstDb,
-      `INSERT INTO session_search(session_id, session_title, role, text) VALUES('${r.id}','${t}','','${t}');`
-    );
-    titleCount++;
+  const titleCount = titleRows.length;
+  if (titleCount > 0) {
+    const titleBatch = titleRows.map((r) => ({
+      sid: r.id,
+      title: r.title || "",
+      role: "",
+      text: r.title || "",
+    }));
+    execInsertBatch(dstDb, titleBatch);
   }
 
   // Verify
