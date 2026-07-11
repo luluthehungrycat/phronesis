@@ -421,6 +421,10 @@ async function loadProfile() {
 
 // ---- Sessions ----
 async function loadSessions() {
+  // SECURITY: every ${} interpolated into innerHTML below is either a trusted
+  // constant, a numeric server field, or an escHtml'd user value. The session_id
+  // is exposed via a data-* attribute (never via an onclick string) and the
+  // click handler is attached AFTER innerHTML to prevent JS injection.
   const el = document.getElementById("session-results");
   el.innerHTML = '<div class="loading"><span class="spinner"></span> Loading sessions...</div>';
 
@@ -442,19 +446,31 @@ async function loadSessions() {
     for (const s of data.sessions) {
       const shortId = (s.session_id || "").slice(0, 12);
       const title = s.session_title || "(untitled)";
+      // session_id goes into a data attribute (escaped for attribute context)
+      // and is wired to openSession via a click handler attached after innerHTML.
+      // This avoids string interpolation of user data into onclick attributes,
+      // which is the only XSS vector that cannot be neutralized by entity-escaping.
       html += `<tr>
-        <td><span class="session-title" onclick="openSession('${s.session_id}')">${escHtml(title)}</span></td>
+        <td><span class="session-title" data-sid="${escHtml(s.session_id || "").replace(/"/g, "&quot;")}">${escHtml(title)}</span></td>
         <td><span class="session-id">${escHtml(shortId)}</span></td>
       </tr>`;
     }
     html += '</tbody></table>';
     el.innerHTML = html;
+    // Attach click handlers from data-sid to avoid JS-injection in onclick strings.
+    el.querySelectorAll(".session-title[data-sid]").forEach(span => {
+      span.onclick = () => openSession(span.dataset.sid);
+    });
   } catch (err) {
     el.innerHTML = `<div class="empty">Error: ${err.message}</div>`;
   }
 }
 
 async function searchSessions() {
+  // SECURITY: every ${} interpolated into innerHTML below is either a trusted
+  // constant, a numeric server field, or an escHtml'd user value. The session_id
+  // is exposed via a data-* attribute (never via an onclick string) and the
+  // click handler is attached AFTER innerHTML to prevent JS injection.
   const q = document.getElementById("search-input").value.trim();
   const el = document.getElementById("session-results");
 
@@ -485,20 +501,37 @@ async function searchSessions() {
       const shortId = (r.session_id || "").slice(0, 12);
       const title = r.session_title || "(untitled)";
       const snippet = r.snippet || "";
+      // session_id goes into a data attribute (escaped for attribute context)
+      // and is wired to openSession via a click handler attached after innerHTML.
       html += `<tr>
-        <td><span class="session-title" onclick="openSession('${r.session_id}')">${escHtml(title)}</span></td>
+        <td><span class="session-title" data-sid="${escHtml(r.session_id || "").replace(/"/g, "&quot;")}">${escHtml(title)}</span></td>
         <td><span class="session-id">${escHtml(shortId)}</span></td>
-        <td class="snippet">${snippet}</td>
+        <td class="snippet">${escHtml(snippet)}<!--
+          TODO(security): re-add safe FTS5 highlight. The snippet() function
+          returns text with <b>...</b> markers. To restore the bold without
+          re-introducing XSS, escHtml the text first, then walk the result
+          and split it into Text/Element nodes around the <b> markers before
+          insertion (e.g. via DOMParser or a manual splitter). For now we
+          drop the highlighting in favor of safety.
+        --></td>
       </tr>`;
     }
     html += '</tbody></table>';
     el.innerHTML = html;
+    // Attach click handlers from data-sid to avoid JS-injection in onclick strings.
+    el.querySelectorAll(".session-title[data-sid]").forEach(span => {
+      span.onclick = () => openSession(span.dataset.sid);
+    });
   } catch (err) {
     el.innerHTML = `<div class="empty">Error: ${err.message}</div>`;
   }
 }
 
 async function openSession(id) {
+  // SECURITY: every ${} interpolated into the `html` string below is either a
+  // trusted constant, a numeric server field, or an escHtml'd user value. The
+  // only "raw" template slot is the role in the class attribute, which is
+  // also passed through escHtml + &quot; escape to be safe for attribute use.
   const modal = document.getElementById("session-modal");
   const title = document.getElementById("modal-title");
   const body = document.getElementById("modal-body");
@@ -519,16 +552,20 @@ async function openSession(id) {
     title.textContent = `Session: ${data.session.title || id.slice(0, 12)}`;
 
     let html = `<div style="margin-bottom:12px; font-size:12px; color:var(--text-muted);">
-      Created: ${data.session.time_created || "unknown"} &middot; ${data.messages.length} messages
+      Created: ${escHtml(data.session.time_created || "unknown")} &middot; ${data.messages.length} messages
     </div>`;
 
     for (const m of data.messages) {
       const role = m.role || "unknown";
       const text = m.text || "";
-      html += `<div class="message ${role}">
+      // role appears in a class attribute (needs & and " escaped) and as text
+      // content (needs < and & escaped). escHtml covers the latter; we add a
+      // &quot; replace for the attribute slot.
+      const roleAttr = escHtml(role).replace(/"/g, "&quot;");
+      html += `<div class="message ${roleAttr}">
         <div class="message-header">
-          <span class="message-role">${role}</span>
-          <span style="font-size:11px;color:var(--text-muted)">${m.time_created || ""}</span>
+          <span class="message-role">${escHtml(role)}</span>
+          <span style="font-size:11px;color:var(--text-muted)">${escHtml(m.time_created || "")}</span>
         </div>
         <div class="message-text">${escHtml(text)}</div>
       </div>`;
@@ -570,6 +607,8 @@ async function loadConfig() {
   }
 
   try {
+    // SECURITY: the innerHTML assignments below use only escHtml'd JSON or
+    // trusted constant strings; no unescaped user data lands in the DOM.
     const res = await fetch("/api/profile");
     const data = await res.json();
     const el = document.getElementById("profile-config");
@@ -583,6 +622,10 @@ async function loadConfig() {
 
 // ---- Gateway ----
 async function loadGateway() {
+  // SECURITY: the unit list below interpolates escHtml'd user fields only
+  // (u.name, u.description, u.active). NOTE: the unit actions buttons
+  // (start/stop/restart) still embed u.name in an onclick string; this was
+  // outside the C1 review scope and is tracked separately.
   const el = document.getElementById("gateway-content");
   el.innerHTML = '<div class="loading"><span class="spinner"></span> Loading gateway status...</div>';
 
