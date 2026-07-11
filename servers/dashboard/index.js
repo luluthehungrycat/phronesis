@@ -17,8 +17,8 @@
  * The dashboard binds to 127.0.0.1 only (loopback). It is NOT exposed to
  * the network; tunnel externally via Tailscale, `ssh -L`, or similar.
  *
- * Two layered controls protect state-changing endpoints
- * (`/api/gateway/:action`) and the units listing (`/api/gateway/status`):
+ * Three layered controls protect the gateway endpoints
+ * (`/api/gateway/:action` and `/api/gateway/status`):
  *
  *   1. Origin / CSRF guard — the request `Origin` header must equal
  *      `http://127.0.0.1:<PORT>`. Browsers cannot forge Origin from
@@ -32,6 +32,11 @@
  *      endpoint. The same naming convention is used by the CLI
  *      (`cli/src/cli.js:159`). An attacker who can speak to the
  *      loopback still cannot target `sshd`, `nginx`, etc.
+ *
+ *   3. Per-IP rate limiting — the gateway endpoints allow at most
+ *      10 requests per minute per IP, enforced by an in-memory
+ *      sliding-window counter. This limits abuse from a local
+ *      attacker or a compromised browser tab.
  *
  * Read-only GET routes outside the gateway surface (sessions search,
  * config, profile) remain accessible to any local client. To expose
@@ -103,6 +108,51 @@ function validateUnit(unit) {
   const canonical = unit.endsWith(".service") ? unit.slice(0, -".service".length) : unit;
   return ALLOWED_UNITS.test(canonical) ? canonical : null;
 }
+
+/**
+ * Simple in-memory sliding-window rate limiter.
+ * Tracks request timestamps per IP and rejects when the count exceeds
+ * `maxRequests` within `windowMs`. Cleanup runs every `windowMs / 2`
+ * and is `.unref()`'d so it does not keep the process alive.
+ *
+ * @param {number} windowMs  — time window in milliseconds
+ * @param {number} maxRequests — max requests per IP per window
+ * @returns {(req: import("http").IncomingMessage) => boolean}
+ */
+function createRateLimiter(windowMs, maxRequests) {
+  const hits = new Map();
+
+  const cleanup = () => {
+    const cutoff = Date.now() - windowMs;
+    for (const [key, timestamps] of hits) {
+      const recent = timestamps.filter(t => t > cutoff);
+      if (recent.length === 0) hits.delete(key);
+      else hits.set(key, recent);
+    }
+  };
+  setInterval(cleanup, Math.max(windowMs / 2, 1000)).unref();
+
+  return (req) => {
+    const ip = req.socket.remoteAddress || "unknown";
+    const now = Date.now();
+    const cutoff = now - windowMs;
+
+    let timestamps = hits.get(ip);
+    if (!timestamps) {
+      timestamps = [];
+      hits.set(ip, timestamps);
+    }
+
+    const recent = timestamps.filter(t => t > cutoff);
+    recent.push(now);
+    hits.set(ip, recent);
+
+    return recent.length <= maxRequests;
+  };
+}
+
+/** Rate-limiter for /api/gateway/:action — 10 requests per minute per IP. */
+const gatewayRateLimiter = createRateLimiter(60_000, 10);
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -324,9 +374,13 @@ app.get("/api/sessions/:id", (req, res) => {
   }
 });
 
-// Gateway status (units listing) — gated by the loopback-origin CSRF check.
+// Gateway status (units listing) — gated by loopback-origin CSRF check and
+// same per-IP rate limit as the action endpoint.
 app.get("/api/gateway/status", (req, res) => {
   if (!checkLoopbackOrigin(req, res)) return;
+  if (!gatewayRateLimiter(req)) {
+    return res.status(429).json({ ok: false, error: "rate limit exceeded" });
+  }
 
   try {
     const profileName = req.query.profile;
@@ -386,6 +440,9 @@ app.get("/api/gateway/status", (req, res) => {
 // systemd unit allowlist. Validation order: origin → action → unit → spawn.
 app.post("/api/gateway/:action", (req, res) => {
   if (!checkLoopbackOrigin(req, res)) return;
+  if (!gatewayRateLimiter(req)) {
+    return res.status(429).json({ ok: false, error: "rate limit exceeded" });
+  }
 
   const validActions = ["start", "stop", "restart", "status"];
   const action = req.params.action;
