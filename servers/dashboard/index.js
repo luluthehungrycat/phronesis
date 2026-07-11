@@ -9,6 +9,43 @@
  *   PORT              - server port (default: 4099)
  *   PROFILE           - profile name to use (default: active profile)
  *   PHRONESIS_HOME    - config directory (default: ~/.config/phronesis)
+ *
+ * ---------------------------------------------------------------------------
+ * Security model
+ * ---------------------------------------------------------------------------
+ *
+ * The dashboard binds to 127.0.0.1 only (loopback). It is NOT exposed to
+ * the network; tunnel externally via Tailscale, `ssh -L`, or similar.
+ *
+ * Three layered controls protect the gateway endpoints
+ * (`/api/gateway/:action` and `/api/gateway/status`):
+ *
+ *   1. Origin / CSRF guard — the request `Origin` header must equal
+ *      `http://127.0.0.1:<PORT>`. Browsers cannot forge Origin from
+ *      cross-origin fetch/forms, so this blocks drive-by CSRF from
+ *      a malicious local page. Requests with a missing or different
+ *      Origin are rejected with HTTP 403.
+ *
+ *   2. Unit allowlist — only systemd user units matching
+ *      `phronesis-gateway-*-telegram-*` (plus the legacy
+ *      `opencode-telegram[-2]` fallback) are accepted by the action
+ *      endpoint. The same naming convention is used by the CLI
+ *      (`cli/src/cli.js:159`). An attacker who can speak to the
+ *      loopback still cannot target `sshd`, `nginx`, etc.
+ *
+ *   3. Per-IP rate limiting — the gateway endpoints allow at most
+ *      10 requests per minute per IP, enforced by an in-memory
+ *      sliding-window counter. This limits abuse from a local
+ *      attacker or a compromised browser tab.
+ *
+ * Read-only GET routes outside the gateway surface (sessions search,
+ * config, profile) remain accessible to any local client. To expose
+ * the dashboard remotely, run it behind an authenticating reverse
+ * proxy (Tailscale serve, Caddy + OIDC, etc.).
+ *
+ * Error responses use `{ ok: false, error: "..." }`; success responses
+ * add an `ok: true` flag and keep the pre-existing top-level fields
+ * for backwards compatibility with the bundled dashboard UI.
  */
 
 import { spawnSync, spawn } from "node:child_process";
@@ -18,6 +55,7 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createServer } from "node:http";
 import express from "express";
+import rateLimit from "express-rate-limit";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -29,6 +67,60 @@ const PORT = parseInt(process.env.PORT || "4099", 10);
 const PHRONESIS_HOME = process.env.PHRONESIS_HOME || join(homedir(), ".config", "phronesis");
 const GLOBAL_CONFIG_PATH = join(PHRONESIS_HOME, "config.yaml");
 const PROFILES_DIR = join(PHRONESIS_HOME, "profiles");
+
+// ---------------------------------------------------------------------------
+// Security constants
+// ---------------------------------------------------------------------------
+
+/**
+ * Allowlist for systemd unit names accepted by /api/gateway/:action.
+ *
+ * Mirrors the naming convention in `cli/src/cli.js` (the `unitName()`
+ * helper resolves `phronesis-gateway-<profile>-telegram-<id>` and
+ * falls back to the legacy `opencode-telegram[-2]`).
+ */
+const ALLOWED_UNITS = /^(phronesis-gateway-[A-Za-z0-9_.-]+-telegram-[A-Za-z0-9_.-]+|opencode-telegram(-2)?)$/;
+
+/** Loopback origin used for the CSRF / origin check on gateway endpoints. */
+const LOOPBACK_ORIGIN = `http://127.0.0.1:${PORT}`;
+
+/**
+ * CSRF / origin check. Reject requests whose `Origin` header does not
+ * match the loopback origin. Returns true if the request is allowed,
+ * false if a 403 response has already been sent.
+ */
+function checkLoopbackOrigin(req, res) {
+  const origin = req.headers.origin;
+  if (origin !== LOOPBACK_ORIGIN) {
+    res.status(403).json({ ok: false, error: `forbidden: origin must be ${LOOPBACK_ORIGIN}` });
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Validate a user-supplied unit name against the allowlist. Strips an
+ * optional `.service` suffix before matching so callers may pass either
+ * form (`phronesis-gateway-default-telegram-1` or `...service`).
+ * Returns the canonical name on success, or null on rejection.
+ */
+function validateUnit(unit) {
+  if (typeof unit !== "string" || unit.length === 0 || unit.length > 200) return null;
+  const canonical = unit.endsWith(".service") ? unit.slice(0, -".service".length) : unit;
+  return ALLOWED_UNITS.test(canonical) ? canonical : null;
+}
+
+/**
+ * Rate-limiter for gateway endpoints — 10 requests per minute per IP.
+ * Uses express-rate-limit with standard `RateLimit-*` headers.
+ */
+const gatewayRateLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { ok: false, error: "rate limit exceeded" },
+});
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -112,6 +204,9 @@ app.use(express.json());
 
 // Static files
 app.use(express.static(join(__dirname, "public")));
+
+// Rate limiter for all /api/gateway/* routes
+app.use("/api/gateway", gatewayRateLimiter);
 
 // ---- API Routes ----
 
@@ -250,8 +345,11 @@ app.get("/api/sessions/:id", (req, res) => {
   }
 });
 
-// Gateway status
+// Gateway status (units listing) — gated by loopback-origin CSRF check.
+// Rate limiting is handled by the /api/gateway middleware (10 req/min/IP).
 app.get("/api/gateway/status", (req, res) => {
+  if (!checkLoopbackOrigin(req, res)) return;
+
   try {
     const profileName = req.query.profile;
 
@@ -284,53 +382,80 @@ app.get("/api/gateway/status", (req, res) => {
     }
 
     res.json({
+      ok: true,
+      data: {
+        profile: profileName || "default",
+        systemctl_available: result.status === 0,
+        units,
+      },
+      // Legacy top-level fields kept for backwards compat with the dashboard UI.
       profile: profileName || "default",
       systemctl_available: result.status === 0,
       units,
     });
   } catch (err) {
-    res.json({ profile: req.query.profile || "default", systemctl_available: false, units: [], error: err.message });
+    res.json({
+      ok: false,
+      error: err.message,
+      profile: req.query.profile || "default",
+      systemctl_available: false,
+      units: [],
+    });
   }
 });
 
-// Gateway service action
+// Gateway service action — gated by the loopback-origin CSRF check and the
+// systemd unit allowlist. Validation order: origin → action → unit → spawn.
+// Rate limiting is handled by the /api/gateway middleware (10 req/min/IP).
 app.post("/api/gateway/:action", (req, res) => {
+  if (!checkLoopbackOrigin(req, res)) return;
+
   const validActions = ["start", "stop", "restart", "status"];
   const action = req.params.action;
 
   if (!validActions.includes(action)) {
-    return res.status(400).json({ error: `Invalid action. Use: ${validActions.join(", ")}` });
+    return res.status(400).json({ ok: false, error: `Invalid action. Use: ${validActions.join(", ")}` });
   }
 
-  const { unit } = req.body;
-  if (!unit) {
-    return res.status(400).json({ error: "unit is required" });
+  const canonical = validateUnit(req.body && req.body.unit);
+  if (!canonical) {
+    return res.status(400).json({ ok: false, error: "unit not in allowlist" });
   }
 
   try {
-    const result = spawnSync("systemctl", ["--user", action, unit], {
+    const result = spawnSync("systemctl", ["--user", action, canonical], {
       encoding: "utf8",
       timeout: 30000,
       stdio: "pipe",
     });
 
     res.json({
+      ok: true,
+      data: {
+        action,
+        unit: canonical,
+        exitCode: result.status === null ? -1 : result.status,
+        stdout: result.stdout?.trim() || "",
+        stderr: result.stderr?.trim() || "",
+      },
+      // Legacy top-level fields kept for backwards compat with the dashboard UI.
       action,
-      unit,
+      unit: canonical,
       status: result.status === 0 ? "success" : "error",
       stdout: result.stdout?.trim() || "",
       stderr: result.stderr?.trim() || "",
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ ok: false, error: err.message });
   }
 });
 
 // ---- Start ----
 
 const server = createServer(app);
-server.listen(PORT, () => {
-  const url = `http://localhost:${PORT}`;
+// loopback only; tunnel externally via Tailscale/SSH/ssh -L
+server.listen(PORT, "127.0.0.1", () => {
+  const url = `http://127.0.0.1:${PORT}`;
   console.log(`Phronesis Dashboard running at ${url}`);
   console.log(`Config: ${GLOBAL_CONFIG_PATH}`);
   console.log("");
