@@ -137,6 +137,11 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
 
+      - name: Configure git identity
+        run: |
+          git config user.name "luluthehermeticcrabBot"
+          git config user.email "280303152+luluthehermeticcrabBot@users.noreply.github.com"
+
       - name: Run OpenCode
         uses: anomalyco/opencode/github@a3b97d9090ccf4aa9ac32268486283e3131e36b4 # github-v1.2.25
         env:
