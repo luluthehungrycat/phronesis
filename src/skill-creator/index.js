@@ -6,10 +6,24 @@ import { getTelegramConfig, sendTelegramNotification } from "../shared/telegram.
 // ---------------------------------------------------------------------------
 // Per-session complexity tracking state
 // ---------------------------------------------------------------------------
+const MAX_SESSIONS = 200;
 const sessionState = new Map();
+
+function evictOldestSession() {
+  let oldestKey = null;
+  let oldestTime = Infinity;
+  for (const [sid, state] of sessionState) {
+    if (state.startedAt < oldestTime) {
+      oldestTime = state.startedAt;
+      oldestKey = sid;
+    }
+  }
+  if (oldestKey) sessionState.delete(oldestKey);
+}
 
 function getState(sessionID) {
   if (!sessionState.has(sessionID)) {
+    if (sessionState.size >= MAX_SESSIONS) evictOldestSession();
     sessionState.set(sessionID, {
       toolCallCount: 0,
       fileModifications: 0,

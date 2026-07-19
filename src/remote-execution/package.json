@@ -3,8 +3,12 @@
   "version": "0.1.0",
   "description": "Unified remote execution for OpenCode — run commands on local, containers, or SSH hosts",
   "type": "module",
-  "exports": {
-    ".": "./index.js"
+  "main": "index.js",
+  "opencode": {
+    "type": "plugin",
+    "hooks": [
+      "config"
+    ]
   },
   "dependencies": {
     "@opencode-ai/plugin": "^1"

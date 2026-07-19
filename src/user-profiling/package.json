@@ -3,8 +3,15 @@
   "version": "0.1.0",
   "description": "Longitudinal user model — learns communication style, preferences, and task patterns from session data",
   "type": "module",
-  "exports": {
-    ".": "./index.js"
+  "main": "index.js",
+  "opencode": {
+    "type": "plugin",
+    "hooks": [
+      "experimental.chat.system.transform",
+      "experimental.chat.messages.transform",
+      "tool.execute.after",
+      "config"
+    ]
   },
   "dependencies": {
     "@opencode-ai/plugin": "^1"

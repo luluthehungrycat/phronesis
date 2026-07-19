@@ -4,6 +4,9 @@
   "description": "FTS5 full-text search across past OpenCode sessions with LLM-summarized results",
   "type": "module",
   "main": "index.js",
+  "opencode": {
+    "type": "plugin"
+  },
   "keywords": ["opencode", "plugin", "search", "fts5", "memory"],
   "license": "MIT",
   "dependencies": {

@@ -1,6 +1,6 @@
 {
   "name": "phronesis",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
   "description": "Practical wisdom from agent experience — OpenCode adaptive skills & memory plugins",

@@ -1,5 +1,5 @@
 import { tool } from "@opencode-ai/plugin";
-import { execSync } from "node:child_process";
+import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { getTelegramConfig, sendTelegramNotification } from "../shared/telegram.js";
@@ -43,17 +43,30 @@ function loadTargets() {
 function executeLocal(command, timeout) {
   const start = Date.now();
   try {
-    const stdout = execSync(command, {
+    const result = spawnSync("sh", ["-c", command], {
       encoding: "utf-8",
       timeout,
       maxBuffer: 10 * 1024 * 1024,
     });
-    return { stdout: stdout.trimEnd(), stderr: "", exitCode: 0, duration: Date.now() - start };
+    if (result.error) {
+      return {
+        stdout: "",
+        stderr: result.error.message,
+        exitCode: result.status ?? 1,
+        duration: Date.now() - start,
+      };
+    }
+    return {
+      stdout: (result.stdout || "").trimEnd(),
+      stderr: (result.stderr || "").trimEnd(),
+      exitCode: result.status ?? 1,
+      duration: Date.now() - start,
+    };
   } catch (e) {
     return {
-      stdout: e.stdout?.toString().trimEnd() || "",
-      stderr: e.stderr?.toString().trimEnd() || e.message,
-      exitCode: e.status ?? 1,
+      stdout: "",
+      stderr: e.message,
+      exitCode: 1,
       duration: Date.now() - start,
     };
   }
@@ -67,22 +80,38 @@ function executeContainer(target, command, timeout) {
     return { stdout: "", stderr: "No container address specified in target config", exitCode: 1, duration: 0 };
   }
 
-  // Build the exec command — quote the remote command safely
-  const fullCmd = `${runtime} exec ${container} sh -c ${JSON.stringify(command)}`;
+  if (!/^[a-zA-Z0-9._-]+$/.test(container)) {
+    return { stdout: "", stderr: "Invalid container name format", exitCode: 1, duration: 0 };
+  }
+
+  const args = ["exec", container, "sh", "-c", command];
   const start = Date.now();
 
   try {
-    const stdout = execSync(fullCmd, {
+    const result = spawnSync(runtime, args, {
       encoding: "utf-8",
       timeout,
       maxBuffer: 10 * 1024 * 1024,
     });
-    return { stdout: stdout.trimEnd(), stderr: "", exitCode: 0, duration: Date.now() - start };
+    if (result.error) {
+      return {
+        stdout: "",
+        stderr: result.error.message,
+        exitCode: result.status ?? 1,
+        duration: Date.now() - start,
+      };
+    }
+    return {
+      stdout: (result.stdout || "").trimEnd(),
+      stderr: (result.stderr || "").trimEnd(),
+      exitCode: result.status ?? 1,
+      duration: Date.now() - start,
+    };
   } catch (e) {
     return {
-      stdout: e.stdout?.toString().trimEnd() || "",
-      stderr: e.stderr?.toString().trimEnd() || e.message,
-      exitCode: e.status ?? 1,
+      stdout: "",
+      stderr: e.message,
+      exitCode: 1,
       duration: Date.now() - start,
     };
   }
@@ -95,21 +124,43 @@ function executeSSH(target, command, timeout) {
     return { stdout: "", stderr: "No SSH address specified in target config", exitCode: 1, duration: 0 };
   }
 
-  const fullCmd = `ssh -o ConnectTimeout=10 -o BatchMode=yes ${userHost} ${JSON.stringify(command)}`;
+  if (!/^[\w.@-]+$/.test(userHost)) {
+    return { stdout: "", stderr: "Invalid SSH address format (expected user@host or host)", exitCode: 1, duration: 0 };
+  }
+
+  const args = [
+    "-o", "ConnectTimeout=10",
+    "-o", "BatchMode=yes",
+    userHost,
+    "sh", "-c", command,
+  ];
   const start = Date.now();
 
   try {
-    const stdout = execSync(fullCmd, {
+    const result = spawnSync("ssh", args, {
       encoding: "utf-8",
       timeout,
       maxBuffer: 10 * 1024 * 1024,
     });
-    return { stdout: stdout.trimEnd(), stderr: "", exitCode: 0, duration: Date.now() - start };
+    if (result.error) {
+      return {
+        stdout: "",
+        stderr: result.error.message,
+        exitCode: result.status ?? 1,
+        duration: Date.now() - start,
+      };
+    }
+    return {
+      stdout: (result.stdout || "").trimEnd(),
+      stderr: (result.stderr || "").trimEnd(),
+      exitCode: result.status ?? 1,
+      duration: Date.now() - start,
+    };
   } catch (e) {
     return {
-      stdout: e.stdout?.toString().trimEnd() || "",
-      stderr: e.stderr?.toString().trimEnd() || e.message,
-      exitCode: e.status ?? 1,
+      stdout: "",
+      stderr: e.message,
+      exitCode: 1,
       duration: Date.now() - start,
     };
   }

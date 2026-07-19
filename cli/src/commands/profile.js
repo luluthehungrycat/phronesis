@@ -14,6 +14,12 @@ import {
   LOCAL_BIN,
 } from "../lib/paths.js";
 
+const PROFILE_NAME_RE = /^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$/;
+
+function isValidProfileName(name) {
+  return typeof name === "string" && PROFILE_NAME_RE.test(name);
+}
+
 /**
  * Create a profile shorthand script at ~/.local/bin/<name>.
  * This proxies all arguments to `phronesis --profile <name>`.
@@ -74,6 +80,11 @@ export function builder(yargs) {
 }
 
 export function handler(argv) {
+  if (argv.name && !isValidProfileName(argv.name)) {
+    console.error(`Invalid profile name "${argv.name}". Use only alphanumeric, hyphens, and underscores (1-64 chars).`);
+    process.exit(1);
+  }
+
   switch (argv.action) {
     case "list": {
       const profiles = listProfiles();
@@ -156,6 +167,10 @@ export function handler(argv) {
 
       // Optionally clone from another profile
       if (argv.from) {
+        if (!isValidProfileName(argv.from)) {
+          console.error(`Invalid source profile name "${argv.from}".`);
+          process.exit(1);
+        }
         if (!profiles.includes(argv.from)) {
           console.error(`Source profile "${argv.from}" not found.`);
           process.exit(1);

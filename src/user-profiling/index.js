@@ -47,10 +47,24 @@ function defaultProfile() {
 // ---------------------------------------------------------------------------
 // Per-session tracking state
 // ---------------------------------------------------------------------------
+const MAX_SESSIONS = 200;
 const sessionProfileState = new Map();
+
+function evictOldestSession() {
+  let oldestKey = null;
+  let oldestTime = Infinity;
+  for (const [sid, state] of sessionProfileState) {
+    if (state.startedAt < oldestTime) {
+      oldestTime = state.startedAt;
+      oldestKey = sid;
+    }
+  }
+  if (oldestKey) sessionProfileState.delete(oldestKey);
+}
 
 function getSessionState(sessionID) {
   if (!sessionProfileState.has(sessionID)) {
+    if (sessionProfileState.size >= MAX_SESSIONS) evictOldestSession();
     sessionProfileState.set(sessionID, {
       toolCallCount: 0,
       messageCount: 0,
