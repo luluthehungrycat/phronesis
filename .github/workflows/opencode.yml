@@ -150,13 +150,11 @@ jobs:
           # directly instead of doing the OIDC token exchange.
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          # Provider/model chain — first one with credentials wins.
-          # opencode-go > mistral > free fallback (big-pickle, deepseek-v4-flash-free, etc.)
-          model: >
-            opencode-go/deepseek-v4-flash,
-            mistral/mistral-medium-latest,
-            opencode/big-pickle,
-            opencode/deepseek-v4-flash-free
+          # Single model — the official action does not support comma-separated
+          # fallback chains. Use opencode/big-pickle (free, no key needed).
+          # To use a paid model (opencode-go/deepseek-v4-flash, etc.), set the
+          # corresponding secret in repo settings.
+          model: opencode/big-pickle
           # Use GITHUB_TOKEN (scoped by permissions: block above) instead of
           # the OpenCode GitHub App. Read-only = no push risk.
           use_github_token: true
