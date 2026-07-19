@@ -127,7 +127,7 @@ jobs:
     timeout-minutes: 15
     permissions:
       id-token: write          # Required for OpenCode's OIDC token exchange
-      contents: read           # Read repo — change to 'write' if agent should push branches
+      contents: write          # Write — agent creates branches and pushes commits
       pull-requests: read      # Read PR context
       issues: write            # Write — needed to post reply comments
     steps:
@@ -135,7 +135,10 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           fetch-depth: 1
-          persist-credentials: false
+          # Keep credentials so OpenCode can push branches.
+          # GITHUB_TOKEN is scoped to issues:write + contents:read per the
+          # permissions block above, so this is safe.
+          persist-credentials: true
 
       - name: Configure git identity
         run: |
