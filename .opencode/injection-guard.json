@@ -1,0 +1,8 @@
+{
+  "scanPatterns": [
+    "bash:*",
+    "webfetch:*"
+  ],
+  "confidenceThreshold": 0.7,
+  "maxOutputLength": 8000
+}

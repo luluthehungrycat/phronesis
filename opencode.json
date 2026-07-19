@@ -1,0 +1,13 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": [
+    "opencode-injection-guard"
+  ],
+  "permission": [
+    {
+      "permission": "question",
+      "action": "deny",
+      "pattern": "*"
+    }
+  ]
+}
