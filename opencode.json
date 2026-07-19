@@ -3,11 +3,7 @@
   "plugin": [
     "opencode-injection-guard"
   ],
-  "permission": [
-    {
-      "permission": "question",
-      "action": "deny",
-      "pattern": "*"
-    }
-  ]
+  "permission": {
+    "question": "deny"
+  }
 }
