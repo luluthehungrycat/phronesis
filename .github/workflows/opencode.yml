@@ -128,7 +128,7 @@ jobs:
     permissions:
       id-token: write          # Required for OpenCode's OIDC token exchange
       contents: write          # Write — agent creates branches and pushes commits
-      pull-requests: read      # Read PR context
+      pull-requests: write     # Write — agent creates PRs after pushing branches
       issues: write            # Write — needed to post reply comments
     steps:
       - name: Checkout repository
