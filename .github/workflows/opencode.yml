@@ -21,8 +21,9 @@ on:
 #    with [BLOCKED] before the agent processes it.
 # 4. Read-only GITHUB_TOKEN — even if compromised, the agent
 #    cannot write to the repo unless you explicitly elevate.
-# 5. Dedicated spend-limited API key — not your primary key;
-#    revocable independently.
+# 5. Provider chain — opencode-go > mistral > free fallback models
+#    (big-pickle, deepseek-v4-flash-free). No API keys = still works
+#    with free OpenCode Zen models.
 # 6. Pinned action SHA — no supply-chain tag rebinding.
 # ───────────────────────────────────────────────────────────────
 
@@ -139,11 +140,19 @@ jobs:
       - name: Run OpenCode
         uses: anomalyco/opencode/github@751b8c8e1b8f1344b2c206f71b539847217bbf12 # pin current stable
         env:
-          # ⚠️ Use a DEDICATED spend-limited API key, not your primary key.
-          # Store it as a repo secret named OPENCODE_ANTHROPIC_API_KEY.
-          ANTHROPIC_API_KEY: ${{ secrets.OPENCODE_ANTHROPIC_API_KEY }}
+          # ── Provider API keys (in priority order) ──
+          # OpenCode Go — paid, best quality, set if you have it
+          OPENCODE_GO_API_KEY: ${{ secrets.OPENCODE_GO_API_KEY }}
+          # Mistral — fallback, still strong
+          MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
         with:
-          model: anthropic/claude-sonnet-4-20250514
+          # Provider/model chain — first one with credentials wins.
+          # opencode-go > mistral > free fallback (big-pickle, deepseek-v4-flash-free, etc.)
+          model: >
+            opencode-go/deepseek-v4-flash,
+            mistral/mistral-large-2407,
+            opencode/big-pickle,
+            opencode/deepseek-v4-flash-free
           # Use GITHUB_TOKEN (scoped by permissions: block above) instead of
           # the OpenCode GitHub App. Read-only = no push risk.
           use_github_token: true
