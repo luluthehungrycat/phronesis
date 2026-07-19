@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@opencode-ai/plugin": "1.18.3",
     "opencode-injection-guard": "^0.2.1"
   }
 }
