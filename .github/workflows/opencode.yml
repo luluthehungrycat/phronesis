@@ -1,0 +1,149 @@
+name: opencode
+
+on:
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+
+# ───────────────────────────────────────────────────────────────
+# SECURITY: Multi-layer hardened workflow for OpenCode GitHub
+# Agent on GitHub-hosted runners.
+#
+# Layers:
+# 1. Collaborator-only gate — only OWNER/MEMBER/COLLABORATOR
+#    can trigger the agent. Blocks PromptPwnd at the door.
+# 2. Pre-AI regex scan — catches obvious injection payloads
+#    (base64, /proc/self/environ, "ignore previous instructions")
+#    before the LLM ever sees them.
+# 3. opencode-injection-guard plugin — runs a judge LLM on
+#    every bash/webfetch tool output. Replaces injected content
+#    with [BLOCKED] before the agent processes it.
+# 4. Read-only GITHUB_TOKEN — even if compromised, the agent
+#    cannot write to the repo unless you explicitly elevate.
+# 5. Dedicated spend-limited API key — not your primary key;
+#    revocable independently.
+# 6. Pinned action SHA — no supply-chain tag rebinding.
+# ───────────────────────────────────────────────────────────────
+
+jobs:
+  # ═══════════════════════════════════════════════════════════
+  # SECURITY GATE: runs BEFORE OpenCode. Blocks untrusted
+  # users and obvious injection payloads. The LLM agent never
+  # sees blocked requests.
+  # ═══════════════════════════════════════════════════════════
+  security-check:
+    name: Security Validation
+    runs-on: ubuntu-latest
+    if: |
+      (contains(github.event.comment.body, '/oc') || contains(github.event.comment.body, '/opencode'))
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+    outputs:
+      allowed: ${{ steps.check.outputs.allowed }}
+      reason: ${{ steps.check.outputs.reason }}
+    steps:
+      - name: Validate trigger conditions
+        id: check
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7
+        with:
+          script: |
+            const body = context.payload.comment.body;
+            const sender = context.payload.sender;
+            const issue = context.payload.issue || context.payload.pull_request;
+            const isPRReview = context.eventName === 'pull_request_review_comment';
+
+            // ── Gate 1: Collaborator-only ──
+            const trusted = ['OWNER', 'MEMBER', 'COLLABORATOR'];
+            if (!trusted.includes(context.payload.comment.author_association)) {
+              core.setOutput('allowed', 'false');
+              core.setOutput('reason', `User ${sender.login} has association '${context.payload.comment.author_association}', requires ${trusted.join(', ')}`);
+              const msg = `> 🚫 **Security Notice**: OpenCode commands are restricted to repository collaborators.`;
+              try {
+                if (isPRReview) {
+                  await github.rest.pulls.createReplyForReviewComment({
+                    owner: context.repo.owner, repo: context.repo.repo,
+                    pull_number: issue.number, comment_id: context.payload.comment.id, body: msg
+                  });
+                } else {
+                  await github.rest.issues.createComment({
+                    owner: context.repo.owner, repo: context.repo.repo,
+                    issue_number: issue.number, body: msg
+                  });
+                }
+              } catch {}
+              return;
+            }
+
+            // ── Gate 2: Suspicious pattern scan ──
+            const suspicious = [
+              /ignore\s+(previous|all|prior)\s+(instructions?|prompts?|directives)/i,
+              /\/proc\/self\/environ/i,
+              /base64\s+(decode|encode)/i,
+              /exfiltrat/i,
+              /disregard\s+(all\s+)?(prior|previous)\s+(instructions?|directives)/i,
+              /system\s*(prompt|message|instruction)/i,
+              /rm\s+-rf\s+\//,
+              /curl\s+.*\|\s*(ba)?sh/i,
+              /You\s+(are\s+)?obligated/i,
+            ];
+            for (const pat of suspicious) {
+              if (pat.test(body)) {
+                core.setOutput('allowed', 'false');
+                core.setOutput('reason', `Suspicious pattern: ${pat}`);
+                try {
+                  if (isPRReview) {
+                    await github.rest.pulls.createReplyForReviewComment({
+                      owner: context.repo.owner, repo: context.repo.repo,
+                      pull_number: issue.number, comment_id: context.payload.comment.id,
+                      body: `> 🚫 **Blocked**: request matched a security pattern and was not processed.`
+                    });
+                  } else {
+                    await github.rest.issues.createComment({
+                      owner: context.repo.owner, repo: context.repo.repo,
+                      issue_number: issue.number,
+                      body: `> 🚫 **Blocked**: request matched a security pattern and was not processed.`
+                    });
+                  }
+                } catch {}
+                return;
+              }
+            }
+
+            core.setOutput('allowed', 'true');
+            core.setOutput('reason', 'All security checks passed');
+
+  # ═══════════════════════════════════════════════════════════
+  # OPENCODE AGENT — runs with minimal permissions. Uses
+  # the repo's opencode.json and .opencode/ plugins.
+  # ═══════════════════════════════════════════════════════════
+  opencode:
+    needs: [security-check]
+    if: needs.security-check.outputs.allowed == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      id-token: write          # Required for OpenCode's OIDC token exchange
+      contents: read           # Read repo — change to 'write' if agent should push branches
+      pull-requests: read      # Read PR context
+      issues: read             # Read issue context
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Run OpenCode
+        uses: anomalyco/opencode/github@751b8c8e1b8f1344b2c206f71b539847217bbf12 # pin current stable
+        env:
+          # ⚠️ Use a DEDICATED spend-limited API key, not your primary key.
+          # Store it as a repo secret named OPENCODE_ANTHROPIC_API_KEY.
+          ANTHROPIC_API_KEY: ${{ secrets.OPENCODE_ANTHROPIC_API_KEY }}
+        with:
+          model: anthropic/claude-sonnet-4-20250514
+          # Use GITHUB_TOKEN (scoped by permissions: block above) instead of
+          # the OpenCode GitHub App. Read-only = no push risk.
+          use_github_token: true

@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "opencode-injection-guard": "^0.2.1"
+  }
+}

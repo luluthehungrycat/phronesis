@@ -8,3 +8,4 @@ test-output/
 .slim/worktrees/
 .slim/worktrees.json
 # END oh-my-opencode-slim worktrees
+# OpenCode plugin cache\n.opencode/node_modules/
