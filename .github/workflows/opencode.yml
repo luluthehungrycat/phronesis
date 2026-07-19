@@ -150,7 +150,7 @@ jobs:
           # opencode-go > mistral > free fallback (big-pickle, deepseek-v4-flash-free, etc.)
           model: >
             opencode-go/deepseek-v4-flash,
-            mistral/mistral-large-2407,
+            mistral/mistral-medium-latest,
             opencode/big-pickle,
             opencode/deepseek-v4-flash-free
           # Use GITHUB_TOKEN (scoped by permissions: block above) instead of
