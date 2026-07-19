@@ -129,7 +129,7 @@ jobs:
       id-token: write          # Required for OpenCode's OIDC token exchange
       contents: read           # Read repo — change to 'write' if agent should push branches
       pull-requests: read      # Read PR context
-      issues: read             # Read issue context
+      issues: write            # Write — needed to post reply comments
     steps:
       - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -145,6 +145,10 @@ jobs:
           OPENCODE_GO_API_KEY: ${{ secrets.OPENCODE_GO_API_KEY }}
           # Mistral — fallback, still strong
           MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
+          # Pass the auto-generated GITHUB_TOKEN for read-only repo access.
+          # Required when use_github_token: true — OpenCode reads this env var
+          # directly instead of doing the OIDC token exchange.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           # Provider/model chain — first one with credentials wins.
           # opencode-go > mistral > free fallback (big-pickle, deepseek-v4-flash-free, etc.)
