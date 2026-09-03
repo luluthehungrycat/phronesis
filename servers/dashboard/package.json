@@ -5,7 +5,7 @@
   "description": "Phronesis web dashboard — session browser, config viewer, gateway status",
   "main": "index.js",
   "dependencies": {
-    "express": "^4.21.0",
+    "express": "^5.2.1",
     "express-rate-limit": "^7.5.1"
   },
   "scripts": {
