@@ -155,7 +155,7 @@ function classifyTask(userMessage) {
 // ---------------------------------------------------------------------------
 // Plugin entrypoint
 // ---------------------------------------------------------------------------
-export default async function plugin(ctx) {
+async function plugin(ctx) {
   const worktree = ctx?.worktree || ctx?.project?.worktree || process.cwd();
   const tgConfig = getTelegramConfig(ctx?.config);
 
@@ -442,3 +442,4 @@ export default async function plugin(ctx) {
     },
   };
 }
+export default { id: "opencode-user-profiling", server: plugin };

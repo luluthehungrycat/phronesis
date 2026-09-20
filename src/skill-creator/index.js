@@ -218,7 +218,7 @@ function autoSaveSkill(state, worktree) {
 // ---------------------------------------------------------------------------
 // Plugin entrypoint
 // ---------------------------------------------------------------------------
-export default async function plugin(ctx) {
+async function plugin(ctx) {
   const worktree = ctx?.worktree || ctx?.project?.worktree || process.cwd();
   const tgConfig = getTelegramConfig(ctx?.config);
 
@@ -620,3 +620,4 @@ function relevanceScore(userInput, skill) {
 
   return score;
 }
+export default { id: "opencode-skill-creator", server: plugin };
