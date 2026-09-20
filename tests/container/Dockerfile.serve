@@ -1,6 +1,6 @@
 # ───────────────────────────────────────────────────────────
 # Phronesis Serve-2 Container
-# Build:  podman build -t phronesis-serve-2 -f tests/container/Dockerfile.serve2 .
+# Build:  podman build -t phronesis-serve -f tests/container/Dockerfile.serve .
 # Run:    See docker-compose or podman command in docs
 # ───────────────────────────────────────────────────────────
 FROM docker.io/node:22-bookworm-slim AS build

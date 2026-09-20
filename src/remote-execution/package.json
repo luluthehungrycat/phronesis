@@ -1,12 +1,19 @@
 {
-  "name": "opencode-remote-execution",
+  "name": "@luluthehungrycat/opencode-remote-execution",
   "version": "0.1.0",
   "description": "Unified remote execution for OpenCode — run commands on local, containers, or SSH hosts",
   "type": "module",
   "exports": {
     ".": "./index.js"
   },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/luluthehungrycat/phronesis.git"
+  },
   "dependencies": {
-    "@opencode-ai/plugin": "^1"
+    "@opencode-ai/plugin": "^1.17.11"
   }
 }

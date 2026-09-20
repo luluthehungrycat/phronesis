@@ -475,7 +475,7 @@ curl -fsSL https://raw.githubusercontent.com/luluthehungrycat/phronesis/main/ins
 | Polish | 🔶 Ongoing | Fix as encountered |
 | CLI scaffold | ✅ **Phase 1a+1b+1c+2+3 complete** | 17 commands: chat, continue, fork, version, config, profile, gateway (status/start/stop/restart/logs/install/uninstall), skills (list/install/update/feedback), sessions (list/search/rebuild), create-plugin, plugin (search/info/list), dashboard, completion, doctor, setup, send, migrate |
 | Search index | ✅ **FTS5 rebuild** | 3907+ rows indexed from opencode.db |
-| Container HEALTHCHECK | ✅ **serve-2** | Curl-based health check added to Dockerfile |
+| Container HEALTHCHECK | ✅ **serve** | Curl-based health check added to Dockerfile |
 | Session-search plugin | ✅ **Refactored** | Fixed execSync→spawnSync, sqlEscape, snippet column index |
 
 ---

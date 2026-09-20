@@ -18,7 +18,6 @@ RUN apk add --no-cache \
     nodejs \
     npm \
     git \
-    gh \
     curl \
     jq \
     sqlite \
@@ -72,7 +71,7 @@ RUN cd /phronesis/src/memory-consolidation \
     && npm rebuild better-sqlite3 2>&1 | tail -5
 
 # ── Entrypoint ──────────────────────────────────────────
-COPY servers/serve-2/entrypoint.sh /entrypoint.sh
+COPY servers/serve/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 # Persist session data, plugin databases, and skills across restarts

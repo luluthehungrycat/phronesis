@@ -1,5 +1,5 @@
 {
-  "name": "opencode-memory-consolidation",
+  "name": "@luluthehungrycat/opencode-memory-consolidation",
   "version": "0.1.0",
   "description": "Local-first persistent memory with periodic consolidation — captures session knowledge as durable facts. Supermemory and Honcho optional add-ons.",
   "type": "module",
@@ -12,8 +12,15 @@
       "config"
     ]
   },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/luluthehungrycat/phronesis.git"
+  },
   "dependencies": {
-    "@opencode-ai/plugin": "^1.14.19",
+    "@opencode-ai/plugin": "^1.17.11",
     "better-sqlite3": "^11.0.0"
   }
 }

@@ -1,5 +1,5 @@
 {
-  "name": "opencode-persona",
+  "name": "@luluthehungrycat/opencode-persona",
   "version": "0.1.0",
   "description": "Structured persona system for OpenCode agents — identity, behavior rules, communication style, constraints, and SOUL.md compatibility",
   "type": "module",
@@ -12,7 +12,14 @@
       "config"
     ]
   },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/luluthehungrycat/phronesis.git"
+  },
   "dependencies": {
-    "@opencode-ai/plugin": "^1.14.19"
+    "@opencode-ai/plugin": "^1.17.11"
   }
 }

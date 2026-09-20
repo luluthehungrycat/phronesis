@@ -7,7 +7,9 @@
   "scripts": {
     "setup": "npm install --prefix src/skill-creator && npm install --prefix src/session-search && npm install --prefix src/persona && npm install --prefix src/memory-consolidation && npm install --prefix src/remote-execution && npm install --prefix src/skill-lifecycle && npm install --prefix src/user-profiling",
     "test": "node tests/container/test.mjs",
-    "test:integration": "node tests/phronesis-integration-test.mjs"
+    "test:integration": "node tests/phronesis-integration-test.mjs",
+    "test:cli-server": "node tests/cli-server-integration.mjs",
+    "release": "node scripts/release.mjs"
   },
   "engines": {
     "node": ">=22"

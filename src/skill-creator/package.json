@@ -1,5 +1,5 @@
 {
-  "name": "opencode-skill-creator",
+  "name": "@luluthehungrycat/opencode-skill-creator",
   "version": "0.1.0",
   "description": "Auto-skill creation from agent experience — turns complex workflows into reusable SKILL.md files",
   "type": "module",
@@ -12,7 +12,14 @@
       "config"
     ]
   },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/luluthehungrycat/phronesis.git"
+  },
   "dependencies": {
-    "@opencode-ai/plugin": "^1.14.19"
+    "@opencode-ai/plugin": "^1.17.11"
   }
 }

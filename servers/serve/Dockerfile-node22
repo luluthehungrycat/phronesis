@@ -1,21 +1,22 @@
 # ───────────────────────────────────────────────────────────
-# Phronesis serve-2 Container
+# Phronesis serve Container
 # Isolated OpenCode server with all Phronesis plugins loaded
 # ───────────────────────────────────────────────────────────
+# Build modes (set via --build-arg BUILD_MODE=):
+#   local  — copy source plugins, use file:// paths (default)
+#   npm    — install published npm packages
+# ───────────────────────────────────────────────────────────
+ARG BUILD_MODE=local
+
 FROM docker.io/node:22-bookworm-slim AS build
 
 RUN apt-get update && apt-get install -y \
     python3 make cmake gcc g++ git curl jq sqlite3 \
     && rm -rf /var/lib/apt/lists/*
 
-# Download OpenCode CLI binary from GitHub releases
-RUN OPENCODE_VERSION=$(curl -sL https://api.github.com/repos/anomalyco/opencode/releases/latest | \
-    grep '"tag_name"' | sed 's/.*"v\([^"]*\)".*/\1/') && \
-    echo "OpenCode version: $OPENCODE_VERSION" && \
-    curl -fsSL "https://github.com/anomalyco/opencode/releases/latest/download/opencode-linux-x64.tar.gz" \
-    -o /tmp/opencode.tar.gz && \
-    tar xzf /tmp/opencode.tar.gz -C /usr/local/bin/ opencode && \
-    rm /tmp/opencode.tar.gz && \
+# Install OpenCode CLI via official install script
+RUN curl -fsSL https://opencode.ai/install | bash && \
+    ln -sf /root/.opencode/bin/opencode /usr/local/bin/opencode && \
     opencode --version
 
 WORKDIR /phronesis
@@ -30,6 +31,8 @@ COPY src/remote-execution/ ./src/remote-execution/
 COPY src/skill-lifecycle/ ./src/skill-lifecycle/
 COPY src/user-profiling/ ./src/user-profiling/
 
+COPY plugins/ ./plugins/
+
 RUN cd src/skill-creator && npm install 2>&1 | tail -3 && cd ../..
 RUN cd src/session-search && npm install 2>&1 | tail -3 && cd ../..
 RUN cd src/persona && npm install 2>&1 | tail -3 && cd ../..
@@ -41,16 +44,36 @@ RUN cd src/user-profiling && npm install 2>&1 | tail -3 && cd ../..
 # ---- Stage 2: Runtime ----
 FROM docker.io/node:22-bookworm-slim
 
+ARG BUILD_MODE
+ENV BUILD_MODE=${BUILD_MODE}
+
+
 RUN apt-get update && apt-get install -y \
     curl jq sqlite3 ca-certificates git gh \
     && rm -rf /var/lib/apt/lists/* \
     && npm install -g better-sqlite3
+RUN npm install -g oh-my-opencode-slim @tarquinen/opencode-dcp@latest
 
 COPY --from=build /usr/local/bin/opencode /usr/local/bin/opencode
+
+# Install npm-published plugins when BUILD_MODE=npm
+# Packages are public on GitHub Packages — no auth needed
+RUN if [ "$BUILD_MODE" = "npm" ]; then \
+      npm install -g \
+        @luluthehungrycat/opencode-skill-creator \
+        @luluthehungrycat/opencode-session-search \
+        @luluthehungrycat/opencode-persona \
+        @luluthehungrycat/opencode-memory-consolidation \
+        @luluthehungrycat/opencode-remote-execution \
+        @luluthehungrycat/opencode-skill-lifecycle \
+        @luluthehungrycat/opencode-user-profiling; \
+    fi
+
+# Copy source plugins only when BUILD_MODE=local
 COPY --from=build /phronesis /phronesis
 
-COPY servers/serve-2/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh && echo "entrypoint built $(date)"
+COPY servers/serve/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh && echo "entrypoint built $(date) mode=${BUILD_MODE}"
 
 # Data directory for isolated opencode.db, plugin DBs
 VOLUME ["/data"]

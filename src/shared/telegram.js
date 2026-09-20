@@ -1,10 +1,12 @@
 /**
  * Telegram notification utility for Phronesis plugins.
  *
- * Reads bot credentials from:
+ * Reads bot credentials from (in priority order):
  *   1. Explicit config object (opencode.json plugin config) — highest priority
- *   2. ~/.config/opencode-telegram-bot/.env — zero-config for existing bots
- *   3. Environment variables (TELEGRAM_BOT_TOKEN / TELEGRAM_ALLOWED_USER_ID) — fallback
+ *   2. OPENCODE_TELEGRAM_HOME/.env — phronesis gateway convention (set by `phronesis gateway install`)
+ *   3. ~/.config/phronesis/config.yaml (telegram.bot_token / telegram.chat_id keys)
+ *   4. ~/.config/opencode-telegram-bot/.env — legacy Bot 1 fallback
+ *   5. Environment variables (TELEGRAM_BOT_TOKEN / TELEGRAM_ALLOWED_USER_ID) — lowest priority
  */
 
 import fs from "node:fs";
@@ -12,9 +14,77 @@ import path from "node:path";
 import { homedir } from "node:os";
 
 const TELEGRAM_API = "https://api.telegram.org/bot";
+const PHRONESIS_CONFIG_PATH = path.join(
+  homedir(), ".config", "phronesis", "config.yaml"
+);
 
 // ---------------------------------------------------------------------------
-// Config resolution
+// Helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Read bot credentials from a standard .env file.
+ * Expects TELEGRAM_BOT_TOKEN and TELEGRAM_ALLOWED_USER_ID keys.
+ * @param {string} filePath
+ * @returns {{ token: string, chatId: string } | null}
+ */
+function readEnvFile(filePath) {
+  if (!fs.existsSync(filePath)) return null;
+  try {
+    const content = fs.readFileSync(filePath, "utf-8");
+    const tokenMatch = content.match(/^TELEGRAM_BOT_TOKEN=(.+)$/m);
+    const chatMatch = content.match(/^TELEGRAM_ALLOWED_USER_ID=(.+)$/m);
+    if (tokenMatch && chatMatch) {
+      return {
+        token: tokenMatch[1].trim(),
+        chatId: chatMatch[1].trim(),
+      };
+    }
+  } catch {
+    // fall through
+  }
+  return null;
+}
+
+/**
+ * Parse telegram credentials from phronesis config.yaml.
+ * Looks for a top-level `telegram:` section with `bot_token` and `chat_id`.
+ *
+ * Handles both quoted and unquoted YAML scalar values.
+ * @param {string} yamlPath
+ * @returns {{ token: string, chatId: string } | null}
+ */
+function readPhronesisTelegramConfig(yamlPath) {
+  if (!fs.existsSync(yamlPath)) return null;
+  try {
+    const raw = fs.readFileSync(yamlPath, "utf-8");
+
+    // Find the telegram: section — capture everything indented under it
+    const sectionMatch = raw.match(
+      /^telegram:\s*\n((?:\s{2,}[^\n]*\n)*)/m
+    );
+    if (!sectionMatch) return null;
+
+    const body = sectionMatch[1];
+
+    // Extract bot_token and chat_id values, handling quotes and comments
+    const botMatch = body.match(/^\s{2}bot_token:\s*["']?([^"'\s#]+)["']?\s*(?:#.*)?$/m);
+    const chatMatch = body.match(/^\s{2}chat_id:\s*["']?([^"'\s#]+)["']?\s*(?:#.*)?$/m);
+
+    if (botMatch && chatMatch) {
+      return {
+        token: botMatch[1].trim(),
+        chatId: chatMatch[1].trim(),
+      };
+    }
+  } catch {
+    // fall through
+  }
+  return null;
+}
+
+// ---------------------------------------------------------------------------
+// Public API
 // ---------------------------------------------------------------------------
 
 /**
@@ -28,25 +98,23 @@ export function getTelegramConfig(pluginCfg = {}) {
     return { token: pluginCfg.botToken, chatId: String(pluginCfg.chatId) };
   }
 
-  // 2. Read from bot-1's .env file
-  const envPath = path.join(homedir(), ".config", "opencode-telegram-bot", ".env");
-  if (fs.existsSync(envPath)) {
-    try {
-      const content = fs.readFileSync(envPath, "utf-8");
-      const tokenMatch = content.match(/^TELEGRAM_BOT_TOKEN=(.+)$/m);
-      const chatMatch = content.match(/^TELEGRAM_ALLOWED_USER_ID=(.+)$/m);
-      if (tokenMatch && chatMatch) {
-        return {
-          token: tokenMatch[1].trim(),
-          chatId: chatMatch[1].trim(),
-        };
-      }
-    } catch {
-      // fall through
-    }
+  // 2. OPENCODE_TELEGRAM_HOME/.env (phronesis gateway convention)
+  if (process.env.OPENCODE_TELEGRAM_HOME) {
+    const envPath = path.join(process.env.OPENCODE_TELEGRAM_HOME, ".env");
+    const result = readEnvFile(envPath);
+    if (result) return result;
   }
 
-  // 3. Environment variables (lowest priority)
+  // 3. Phronesis global config (~/.config/phronesis/config.yaml)
+  const yamlResult = readPhronesisTelegramConfig(PHRONESIS_CONFIG_PATH);
+  if (yamlResult) return yamlResult;
+
+  // 4. Legacy Bot 1 .env
+  const bot1Env = path.join(homedir(), ".config", "opencode-telegram-bot", ".env");
+  const legacyResult = readEnvFile(bot1Env);
+  if (legacyResult) return legacyResult;
+
+  // 5. Environment variables (lowest priority)
   if (process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_ALLOWED_USER_ID) {
     return {
       token: process.env.TELEGRAM_BOT_TOKEN,

@@ -1,18 +1,26 @@
 # ──────────────────────────────────────────────────────────
-# Phronesis serve-2 — Containerized OpenCode server
+# Phronesis serve — Containerized OpenCode server
+# ──────────────────────────────────────────────────────────
+# Usage:
+#   docker compose build    (BUILD_MODE=local, default)
+#   BUILD_MODE=npm docker compose build
+#   docker compose up -d
 # ──────────────────────────────────────────────────────────
 services:
   server:
     build:
       context: ../..
-      dockerfile: servers/serve-2/Dockerfile
-    image: phronesis-serve:latest
+      dockerfile: servers/serve/Dockerfile-node22
+      args:
+        BUILD_MODE: ${BUILD_MODE:-local}
+
+    image: phronesis-serve:${BUILD_MODE:-local}
     container_name: phronesis-server
     ports:
       - "127.0.0.1:4097:4097"
     volumes:
       - phronesis-server-data:/data
-      - $HOME/.phronesis/workspace:/root/.phronesis/workspace:rw
+      - $HOME/.phronesis/workspace:/workspace:rw
     restart: unless-stopped
 
 volumes:

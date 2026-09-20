@@ -1,12 +1,19 @@
 {
-  "name": "opencode-user-profiling",
+  "name": "@luluthehungrycat/opencode-user-profiling",
   "version": "0.1.0",
   "description": "Longitudinal user model — learns communication style, preferences, and task patterns from session data",
   "type": "module",
   "exports": {
     ".": "./index.js"
   },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/luluthehungrycat/phronesis.git"
+  },
   "dependencies": {
-    "@opencode-ai/plugin": "^1"
+    "@opencode-ai/plugin": "^1.17.11"
   }
 }
