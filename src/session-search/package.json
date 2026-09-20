@@ -9,5 +9,8 @@
   "dependencies": {
     "@opencode-ai/plugin": "^1.14.0",
     "zod": "^3.22.0"
+  },
+  "overrides": {
+    "toml": "4.3.0"
   }
 }
