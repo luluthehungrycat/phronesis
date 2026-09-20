@@ -10,6 +10,7 @@ export NODE_PATH=/usr/local/lib/node_modules
 
 mkdir -p /data/.local/share/opencode
 mkdir -p /data/.opencode/skills
+mkdir -p /data/.phronesis
 
 # Redirect all .opencode operations (skills, agents, etc.) to persisted volume
 # save-skill etc. resolve worktree to "/" (root) and write to /.opencode/skills/
