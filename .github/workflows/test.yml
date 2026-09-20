@@ -41,6 +41,10 @@ jobs:
         run: npm test
         working-directory: ./cli
 
+      - name: Run CLI plugin scaffold tests
+        run: npm run test:scaffold
+        working-directory: ./cli
+
       - name: Run E2E smoke tests
         run: node tests/e2e/test.mjs
 
