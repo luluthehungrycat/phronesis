@@ -461,6 +461,10 @@ export default async function plugin(ctx) {
             meta.deprecation = null;
             meta.updatedAt = new Date().toISOString();
             writeMeta(worktree, args.name, meta);
+            sendTelegramNotification(
+              `<b>🔄 Skill Reinstated</b>\n<code>${args.name}</code>`,
+              tgConfig
+            );
             return JSON.stringify({
               success: true,
               action: "reinstate",
@@ -471,6 +475,11 @@ export default async function plugin(ctx) {
           meta.deprecation = args.reason || "No reason given";
           meta.updatedAt = new Date().toISOString();
           writeMeta(worktree, args.name, meta);
+
+          sendTelegramNotification(
+            `<b>⚠️ Skill Deprecated</b>\n<code>${args.name}</code>\n${meta.deprecation}`,
+            tgConfig
+          );
 
           return JSON.stringify({
             success: true,
@@ -526,6 +535,13 @@ export default async function plugin(ctx) {
               fs.rmSync(dir, { recursive: true, force: true });
               removed.push(name);
             }
+          }
+
+          if (removed.length > 0) {
+            sendTelegramNotification(
+              `<b>🗑️ Skills Pruned</b>\nRemoved ${removed.length} deprecated skill(s).\n<code>${removed.join(", ")}</code>`,
+              tgConfig
+            );
           }
 
           return JSON.stringify({
