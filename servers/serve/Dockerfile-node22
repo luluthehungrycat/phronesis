@@ -42,7 +42,7 @@ RUN cd src/user-profiling && npm install 2>&1 | tail -3 && cd ../..
 FROM docker.io/node:22-bookworm-slim
 
 RUN apt-get update && apt-get install -y \
-    curl jq sqlite3 ca-certificates git gh \
+    curl jq sqlite3 ca-certificates git \
     && rm -rf /var/lib/apt/lists/* \
     && npm install -g better-sqlite3
 

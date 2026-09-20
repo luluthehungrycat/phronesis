@@ -18,7 +18,6 @@ RUN apk add --no-cache \
     nodejs \
     npm \
     git \
-    gh \
     curl \
     jq \
     sqlite \
