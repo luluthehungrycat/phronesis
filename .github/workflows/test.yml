@@ -48,6 +48,9 @@ jobs:
       - name: Run E2E smoke tests
         run: node tests/e2e/test.mjs
 
+      - name: Run CLI-server integration tests
+        run: node tests/cli-server-integration.mjs
+
       - name: Run Telegram configuration tests
         run: node tests/telegram-config.mjs
 
