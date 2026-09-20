@@ -48,6 +48,9 @@ jobs:
       - name: Run E2E smoke tests
         run: node tests/e2e/test.mjs
 
+      - name: Run Telegram configuration tests
+        run: node tests/telegram-config.mjs
+
       - name: Show test output on failure
         if: failure()
         run: cat /tmp/phronesis-*.log 2>/dev/null || echo "(no test logs found)"
