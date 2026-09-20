@@ -19,9 +19,9 @@ const OPencode_LOCATIONS = [
  * Checks PATH first, then known locations.
  * Returns "opencode" (rely on PATH) if nothing explicit found.
  */
-export function resolveOpenCodeBinary() {
+export function resolveOpenCodeBinary({ locations = OPencode_LOCATIONS } = {}) {
   // Try explicit locations first
-  for (const loc of OPencode_LOCATIONS) {
+  for (const loc of locations) {
     try {
       accessSync(loc);
       return loc;
@@ -175,8 +175,8 @@ export function opencodeRun(tool, toolArgs = [], opts = {}) {
 /**
  * Check if the opencode binary is available.
  */
-export function opencodeAvailable() {
-  const bin = resolveOpenCodeBinary();
+export function opencodeAvailable({ binary } = {}) {
+  const bin = binary || resolveOpenCodeBinary();
   const result = spawnSync(bin, ["--version"], {
     encoding: "utf8",
     stdio: "pipe",

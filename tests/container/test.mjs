@@ -906,6 +906,16 @@ async function testOpenCodeIntegration() {
   console.log('\n🚀 Section 6: OpenCode Integration');
   console.log('──────────────────────────────────────────');
 
+  try {
+    require('child_process').execFileSync('opencode', ['--version'], {
+      encoding: 'utf-8',
+      stdio: 'pipe',
+    });
+  } catch {
+    console.log('  ⏭️  OpenCode is not installed; integration checks skipped');
+    return;
+  }
+
   await testAsync('opencode binary is available', async () => {
     try {
       const result = require('child_process').execSync('opencode --version 2>&1', { encoding: 'utf-8' });
