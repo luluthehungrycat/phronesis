@@ -20,7 +20,7 @@ Phronesis has delivered all planned Phase 🟢 and Phase 🟡 capabilities:
 - **Multi-instance Telegram gateway** with 2 bot instances (Phase 🔴 MVP)
 - **AgentMail MCP** configured for email gateway
 
-All 7 plugins are registered in the workspace `opencode.json` and active on bot2 (port 4097) via the `phronesis-serve-2` container. The Telegram gateway routes both bot instances through OpenCode, giving all Phronesis plugins automatic Telegram availability.
+All 7 plugins are registered in the workspace `opencode.json` and active on bot2 (port 4097) via the `phronesis-serve` container. The Telegram gateway routes both bot instances through OpenCode, giving all Phronesis plugins automatic Telegram availability.
 
 **Key milestone**: All plugin tools now have explicit `"allow"` permissions at both top-level and per-agent (build, orchestrator), and agent prompts include structured MUST/SHOULD guidance forcing the model to use memory, skills, profile, and session search tools.
 
@@ -167,12 +167,12 @@ Builds longitudinal user models from session interactions. Tracks communication 
             ┌─────────────────┼──────────────────┐
             │                 │                    │
    ┌────────▼────────┐  ┌────▼──────────┐  ┌─────▼─────┐
-   │ opencode-serve-2 │  │ Telegram Bot 1│  │Telegram B2│
+   │ opencode-serve │  │ Telegram Bot 1│  │Telegram B2│
    │    (port 4097)   │  │  (port 4096)  │  │(port 4097)│
    └─────────────────┘  └───────────────┘  └───────────┘
 ```
 
-Both Telegram bots share the same session database on disk (both ultimately go through `opencode serve` on port 4096). Bot 2 connects via serve-2 which is a separate OpenCode server process but points at the same working directory and config.
+Both Telegram bots share the same session database on disk (both ultimately go through `opencode serve` on port 4096). Bot 2 connects via serve which is a separate OpenCode server process but points at the same working directory and config.
 
 ---
 
@@ -202,7 +202,7 @@ Test infrastructure: Podman/Docker container with multi-stage build, OpenCode bi
 ```
 Systemd Units:
 ├── opencode-serve.service       → port 4096, oc-srv-workspace
-├── opencode-serve-2.service     → port 4097, oc-srv-workspace
+├── phronesis-serve.service     → port 4097, oc-srv-workspace
 ├── opencode-telegram.service    → Bot 1, port 4096
 ├── opencode-telegram-2.service  → Bot 2, port 4097
 

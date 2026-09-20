@@ -52,7 +52,7 @@ src/
 └── user-profiling/              P9 — Longitudinal user model plugin
 
 servers/
-└── serve-2/                     Isolated container for bot2 (port 4097)
+└── serve/                     Isolated container for bot2 (port 4097)
     └── Dockerfile               Multi-stage + HEALTHCHECK
 
 tests/

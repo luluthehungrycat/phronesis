@@ -53,7 +53,7 @@ async function main() {
   console.log("Status: ✅ Migration complete");
   if (!isDryRun) {
     console.log("Container will use the copied DB on next restart.");
-    console.log("Restart serve-2: podman-compose -f servers/serve-2/docker-compose.yml restart");
+    console.log("Restart serve: podman-compose -f servers/serve/docker-compose.yml restart");
   }
 }
 

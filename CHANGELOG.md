@@ -14,7 +14,7 @@
 - MkDocs documentation site deployed to GitHub Pages
 - CI/CD: test.yml, publish.yml, docs.yml workflows
 - CI all-test-suites job running CLI + plugins + E2E in parallel
-- Container build with HEALTHCHECK for serve-2
+- Container build with HEALTHCHECK for serve
 - Install script (`curl | bash` via raw.githubusercontent.com)
 - Auto-upgrade via GitHub Releases (`phronesis upgrade`)
 - PII cleanup across workflows, config, and repo URLs

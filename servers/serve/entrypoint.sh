@@ -1,6 +1,6 @@
 #!/bin/bash
 # ───────────────────────────────────────────────────────────
-# Phronesis serve-2 entrypoint
+# Phronesis serve entrypoint
 # Starts opencode serve with isolated data directory
 # ───────────────────────────────────────────────────────────
 set -e
@@ -22,7 +22,7 @@ if [ ! -f "$WORKSPACE/opencode.json" ]; then
     exit 1
 fi
 
-echo "=== Phronesis serve-2 ==="
+echo "=== Phronesis serve ==="
 echo "Data dir: /data"
 echo "Workspace: $WORKSPACE"
 echo "OpenCode version: $(opencode --version 2>&1)"
