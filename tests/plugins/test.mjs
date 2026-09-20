@@ -48,6 +48,13 @@ async function testAsync(name, fn) {
   }
 }
 
+
+function pluginServer(mod) {
+  if (typeof mod.default === "function") return mod.default;
+  if (mod.default && typeof mod.default.server === "function") return mod.default.server;
+  throw new Error("plugin module must expose a server() factory");
+}
+
 function assert(condition, msg) {
   if (!condition) throw new Error(msg || 'Assertion failed');
 }
@@ -65,13 +72,14 @@ async function testPersonaPlugin() {
   // 1.1 Module loads correctly
   await testAsync('persona module imports as ESM with default function', async () => {
     const mod = await import(join(SRC, 'persona', 'index.js'));
-    assert(typeof mod.default === 'function', 'default export must be a function');
+    assert(mod.default !== null && typeof mod.default === 'object', 'default export must be an object');
+    assert(typeof mod.default.server === 'function', 'must have server() factory');
   });
 
   // 1.2 Plugin returns hooks with expected tools
   await testAsync('persona returns hooks with 6 tools', async () => {
     const mod = await import(join(SRC, 'persona', 'index.js'));
-    const hooks = await mod.default({ worktree: tmpDir });
+    const hooks = await pluginServer(mod)({ worktree: tmpDir });
 
     assert(hooks !== null && typeof hooks === 'object', 'hooks must be an object');
     assert(typeof hooks.tool === 'object', 'must register tools');
@@ -89,7 +97,7 @@ async function testPersonaPlugin() {
   // 1.3 defaultPersona structure (via get-persona)
   await testAsync('get-persona returns default persona with correct structure', async () => {
     const mod = await import(join(SRC, 'persona', 'index.js'));
-    const hooks = await mod.default({ worktree: tmpDir });
+    const hooks = await pluginServer(mod)({ worktree: tmpDir });
 
     const result = await hooks.tool['get-persona'].execute({}, {});
     const persona = JSON.parse(result);
@@ -114,7 +122,7 @@ async function testPersonaPlugin() {
   // 1.4 Persona file read/write round-trip using tmpdir
   await testAsync('set-persona creates PERSONA.md then get-persona reads it back', async () => {
     const mod = await import(join(SRC, 'persona', 'index.js'));
-    const hooks = await mod.default({ worktree: tmpDir });
+    const hooks = await pluginServer(mod)({ worktree: tmpDir });
 
     const setResult = await hooks.tool['set-persona'].execute({
       persona: JSON.stringify({
@@ -149,7 +157,7 @@ async function testPersonaPlugin() {
   // 1.5 edit-persona changes specific fields
   await testAsync('edit-persona changes specific fields while preserving others', async () => {
     const mod = await import(join(SRC, 'persona', 'index.js'));
-    const hooks = await mod.default({ worktree: tmpDir });
+    const hooks = await pluginServer(mod)({ worktree: tmpDir });
 
     // Ensure persona exists
     await hooks.tool['set-persona'].execute({
@@ -184,7 +192,7 @@ async function testPersonaPlugin() {
   // 1.6 reset-persona removes file
   await testAsync('reset-persona removes file and reverts to defaults', async () => {
     const mod = await import(join(SRC, 'persona', 'index.js'));
-    const hooks = await mod.default({ worktree: tmpDir });
+    const hooks = await pluginServer(mod)({ worktree: tmpDir });
 
     const resetResult = await hooks.tool['reset-persona'].execute({}, {});
     const resetParsed = JSON.parse(resetResult);
@@ -210,7 +218,7 @@ async function testPersonaPlugin() {
     mkdirSync(personaDir, { recursive: true });
     writeFileSync(join(personaDir, 'PERSONA.md'), 'not valid yaml or frontmatter', 'utf-8');
 
-    const hooks = await mod.default({ worktree: tmpDir });
+    const hooks = await pluginServer(mod)({ worktree: tmpDir });
     const result = await hooks.tool['get-persona'].execute({}, {});
     const persona = JSON.parse(result);
 
@@ -247,7 +255,7 @@ I communicate in a friendly manner with balanced detail, maintaining a casual to
     const soulPath = join(tmpDir, 'test-soul.md');
     writeFileSync(soulPath, soulContent, 'utf-8');
 
-    const hooks = await mod.default({ worktree: tmpDir });
+    const hooks = await pluginServer(mod)({ worktree: tmpDir });
 
     // Import from SOUL
     const importResult = await hooks.tool['import-soul'].execute({ path: 'test-soul.md' }, {});
@@ -265,7 +273,7 @@ I communicate in a friendly manner with balanced detail, maintaining a casual to
   // 1.9 persona system.transform injects guidance
   await testAsync('persona system.transform injects persona identity into output', async () => {
     const mod = await import(join(SRC, 'persona', 'index.js'));
-    const hooks = await mod.default({ worktree: tmpDir });
+    const hooks = await pluginServer(mod)({ worktree: tmpDir });
 
     // Set a persona first
     await hooks.tool['set-persona'].execute({
@@ -288,7 +296,7 @@ I communicate in a friendly manner with balanced detail, maintaining a casual to
   // 1.10 persona messages.transform runs without error
   await testAsync('persona messages.transform runs without error', async () => {
     const mod = await import(join(SRC, 'persona', 'index.js'));
-    const hooks = await mod.default({ worktree: tmpDir });
+    const hooks = await pluginServer(mod)({ worktree: tmpDir });
 
     const xfrm = hooks['experimental.chat.messages.transform'];
     const input = { messages: [{ role: 'user', content: 'Hi' }] };
@@ -300,7 +308,7 @@ I communicate in a friendly manner with balanced detail, maintaining a casual to
   // 1.11 config hook sets persona permission
   await testAsync('persona config hook sets permission', async () => {
     const mod = await import(join(SRC, 'persona', 'index.js'));
-    const hooks = await mod.default({ worktree: tmpDir });
+    const hooks = await pluginServer(mod)({ worktree: tmpDir });
 
     const config = {};
     await hooks.config(config);
@@ -323,13 +331,14 @@ async function testSkillCreatorPlugin() {
   // 2.1 Module loads correctly
   await testAsync('skill-creator module imports as ESM with default function', async () => {
     const mod = await import(join(SRC, 'skill-creator', 'index.js'));
-    assert(typeof mod.default === 'function', 'default export must be a function');
+    assert(mod.default !== null && typeof mod.default === 'object', 'default export must be an object');
+    assert(typeof mod.default.server === 'function', 'must have server() factory');
   });
 
   // 2.2 Plugin returns hooks with expected tools
   await testAsync('skill-creator returns hooks with 4 tools', async () => {
     const mod = await import(join(SRC, 'skill-creator', 'index.js'));
-    const hooks = await mod.default({ worktree: tmpDir });
+    const hooks = await pluginServer(mod)({ worktree: tmpDir });
 
     assert(hooks !== null && typeof hooks === 'object', 'hooks must be an object');
     assert(typeof hooks.tool === 'object', 'must register tools');
@@ -348,7 +357,7 @@ async function testSkillCreatorPlugin() {
   // 2.3 save-skill creates SKILL.md
   await testAsync('save-skill creates SKILL.md with correct content', async () => {
     const mod = await import(join(SRC, 'skill-creator', 'index.js'));
-    const hooks = await mod.default({ worktree: tmpDir });
+    const hooks = await pluginServer(mod)({ worktree: tmpDir });
 
     const result = await hooks.tool['save-skill'].execute({
       name: 'test-my-skill',
@@ -378,7 +387,7 @@ async function testSkillCreatorPlugin() {
   // 2.4 Dedup: save-skill detects conflict
   await testAsync('save-skill dedup detects conflicting name', async () => {
     const mod = await import(join(SRC, 'skill-creator', 'index.js'));
-    const hooks = await mod.default({ worktree: tmpDir });
+    const hooks = await pluginServer(mod)({ worktree: tmpDir });
 
     // Try to save with a different-cased name that normalizes to same
     const result = await hooks.tool['save-skill'].execute({
@@ -398,7 +407,7 @@ async function testSkillCreatorPlugin() {
   // 2.5 Dedup: update:true overwrites
   await testAsync('save-skill with update:true overwrites existing skill', async () => {
     const mod = await import(join(SRC, 'skill-creator', 'index.js'));
-    const hooks = await mod.default({ worktree: tmpDir });
+    const hooks = await pluginServer(mod)({ worktree: tmpDir });
 
     const result = await hooks.tool['save-skill'].execute({
       name: 'test-my-skill',
@@ -421,7 +430,7 @@ async function testSkillCreatorPlugin() {
   // 2.6 list-skills returns saved skills
   await testAsync('list-skills returns saved skill', async () => {
     const mod = await import(join(SRC, 'skill-creator', 'index.js'));
-    const hooks = await mod.default({ worktree: tmpDir });
+    const hooks = await pluginServer(mod)({ worktree: tmpDir });
 
     const result = await hooks.tool['list-skills'].execute({}, {});
     const parsed = JSON.parse(result);
@@ -433,7 +442,7 @@ async function testSkillCreatorPlugin() {
   // 2.7 update-skill merges changes
   await testAsync('update-skill merges changes into existing skill', async () => {
     const mod = await import(join(SRC, 'skill-creator', 'index.js'));
-    const hooks = await mod.default({ worktree: tmpDir });
+    const hooks = await pluginServer(mod)({ worktree: tmpDir });
 
     // Update only the trigger
     const result = await hooks.tool['update-skill'].execute({
@@ -453,7 +462,7 @@ async function testSkillCreatorPlugin() {
   // 2.8 update-skill for non-existent returns error
   await testAsync('update-skill returns error for non-existent skill', async () => {
     const mod = await import(join(SRC, 'skill-creator', 'index.js'));
-    const hooks = await mod.default({ worktree: tmpDir });
+    const hooks = await pluginServer(mod)({ worktree: tmpDir });
 
     const result = await hooks.tool['update-skill'].execute({
       name: 'does-not-exist',
@@ -468,7 +477,7 @@ async function testSkillCreatorPlugin() {
   // 2.9 skill-feedback stores rating
   await testAsync('skill-feedback stores rating for existing skill', async () => {
     const mod = await import(join(SRC, 'skill-creator', 'index.js'));
-    const hooks = await mod.default({ worktree: tmpDir });
+    const hooks = await pluginServer(mod)({ worktree: tmpDir });
 
     const result = await hooks.tool['skill-feedback'].execute({
       name: 'test-my-skill',
@@ -486,7 +495,7 @@ async function testSkillCreatorPlugin() {
   // 2.10 skill-feedback for non-existent returns error
   await testAsync('skill-feedback handles missing skill gracefully', async () => {
     const mod = await import(join(SRC, 'skill-creator', 'index.js'));
-    const hooks = await mod.default({ worktree: tmpDir });
+    const hooks = await pluginServer(mod)({ worktree: tmpDir });
 
     const result = await hooks.tool['skill-feedback'].execute({
       name: 'i-do-not-exist',
@@ -501,7 +510,7 @@ async function testSkillCreatorPlugin() {
   // 2.11 State management: tool.execute.after tracks complexity
   await testAsync('tool.execute.after tracks tool call state', async () => {
     const mod = await import(join(SRC, 'skill-creator', 'index.js'));
-    const hooks = await mod.default({ worktree: tmpDir });
+    const hooks = await pluginServer(mod)({ worktree: tmpDir });
 
     const tracker = hooks['tool.execute.after'];
     const sessionID = 'state-test-' + Date.now();
@@ -517,7 +526,7 @@ async function testSkillCreatorPlugin() {
   // 2.12 Name normalization edge case
   await testAsync('save-skill handles name normalization correctly', async () => {
     const mod = await import(join(SRC, 'skill-creator', 'index.js'));
-    const hooks = await mod.default({ worktree: tmpDir });
+    const hooks = await pluginServer(mod)({ worktree: tmpDir });
 
     // Test with special characters
     const result = await hooks.tool['save-skill'].execute({
@@ -536,7 +545,7 @@ async function testSkillCreatorPlugin() {
   // 2.13 system.transform injects guidance
   await testAsync('skill-creator system.transform injects skill guidance', async () => {
     const mod = await import(join(SRC, 'skill-creator', 'index.js'));
-    const hooks = await mod.default({ worktree: tmpDir });
+    const hooks = await pluginServer(mod)({ worktree: tmpDir });
 
     const xfrm = hooks['experimental.chat.system.transform'];
     const input = { messages: [{ role: 'user', content: 'fix issue' }] };
@@ -554,7 +563,7 @@ async function testSkillCreatorPlugin() {
   // 2.14 config hook sets permission
   await testAsync('skill-creator config hook sets skill permission', async () => {
     const mod = await import(join(SRC, 'skill-creator', 'index.js'));
-    const hooks = await mod.default({ worktree: tmpDir });
+    const hooks = await pluginServer(mod)({ worktree: tmpDir });
 
     const config = {};
     await hooks.config(config);
@@ -637,13 +646,14 @@ async function testMemoryConsolidationPlugin() {
   // 4.1 Module loads correctly
   await testAsync('memory-consolidation module imports as ESM with default function', async () => {
     const mod = await import(join(SRC, 'memory-consolidation', 'index.js'));
-    assert(typeof mod.default === 'function', 'default export must be a function');
+    assert(mod.default !== null && typeof mod.default === 'object', 'default export must be an object');
+    assert(typeof mod.default.server === 'function', 'must have server() factory');
   });
 
   // 4.2 Plugin returns hooks with expected tools
   await testAsync('memory-consolidation returns hooks with 8 tools', async () => {
     const mod = await import(join(SRC, 'memory-consolidation', 'index.js'));
-    const hooks = await mod.default({});
+    const hooks = await pluginServer(mod)({});
 
     assert(hooks !== null && typeof hooks === 'object', 'hooks must be an object');
     assert(typeof hooks.tool === 'object', 'must register tools');
@@ -664,7 +674,7 @@ async function testMemoryConsolidationPlugin() {
   // 4.3 system.transform injects memory guidance
   await testAsync('memory-consolidation system.transform injects memory context', async () => {
     const mod = await import(join(SRC, 'memory-consolidation', 'index.js'));
-    const hooks = await mod.default({});
+    const hooks = await pluginServer(mod)({});
 
     const xfrm = hooks['experimental.chat.system.transform'];
     const input = { messages: [{ role: 'user', content: 'test' }] };
@@ -690,7 +700,7 @@ async function testMemoryConsolidationPlugin() {
   // 4.4 session.compacting hook exists and runs
   await testAsync('memory-consolidation session.compacting runs without error', async () => {
     const mod = await import(join(SRC, 'memory-consolidation', 'index.js'));
-    const hooks = await mod.default({});
+    const hooks = await pluginServer(mod)({});
 
     const compact = hooks['experimental.session.compacting'];
     try {
@@ -703,7 +713,7 @@ async function testMemoryConsolidationPlugin() {
   // 4.5 config hook sets permission
   await testAsync('memory-consolidation config hook sets memory permission', async () => {
     const mod = await import(join(SRC, 'memory-consolidation', 'index.js'));
-    const hooks = await mod.default({});
+    const hooks = await pluginServer(mod)({});
 
     const config = {};
     await hooks.config(config);
@@ -713,7 +723,7 @@ async function testMemoryConsolidationPlugin() {
   // 4.6 Tool descriptions are non-empty
   await testAsync('memory-consolidation tool descriptions are meaningful', async () => {
     const mod = await import(join(SRC, 'memory-consolidation', 'index.js'));
-    const hooks = await mod.default({});
+    const hooks = await pluginServer(mod)({});
 
     for (const [name, t] of Object.entries(hooks.tool)) {
       assert(typeof t.description === 'string', `${name} must have description`);
@@ -735,13 +745,14 @@ async function testUserProfilingPlugin() {
   // 5.1 Module loads correctly
   await testAsync('user-profiling module imports as ESM with default function', async () => {
     const mod = await import(join(SRC, 'user-profiling', 'index.js'));
-    assert(typeof mod.default === 'function', 'default export must be a function');
+    assert(mod.default !== null && typeof mod.default === 'object', 'default export must be an object');
+    assert(typeof mod.default.server === 'function', 'must have server() factory');
   });
 
   // 5.2 Plugin returns hooks with expected tools
   await testAsync('user-profiling returns hooks with 3 tools', async () => {
     const mod = await import(join(SRC, 'user-profiling', 'index.js'));
-    const hooks = await mod.default({ worktree: tmpDir });
+    const hooks = await pluginServer(mod)({ worktree: tmpDir });
 
     assert(hooks !== null && typeof hooks === 'object', 'hooks must be an object');
     assert(typeof hooks.tool === 'object', 'must register tools');
@@ -760,7 +771,7 @@ async function testUserProfilingPlugin() {
   // 5.3 Profile template structure (empty state)
   await testAsync('profile-summary returns correct empty profile structure', async () => {
     const mod = await import(join(SRC, 'user-profiling', 'index.js'));
-    const hooks = await mod.default({ worktree: tmpDir });
+    const hooks = await pluginServer(mod)({ worktree: tmpDir });
 
     const result = await hooks.tool['profile-summary'].execute();
     const profile = JSON.parse(result);
@@ -777,7 +788,7 @@ async function testUserProfilingPlugin() {
   // 5.4 profile-preference records a preference
   await testAsync('profile-preference records and retrieves preferences', async () => {
     const mod = await import(join(SRC, 'user-profiling', 'index.js'));
-    const hooks = await mod.default({ worktree: tmpDir });
+    const hooks = await pluginServer(mod)({ worktree: tmpDir });
 
     const result = await hooks.tool['profile-preference'].execute({
       category: 'communication',
@@ -804,7 +815,7 @@ async function testUserProfilingPlugin() {
     mkdirSync(profileDir, { recursive: true });
     writeFileSync(join(profileDir, 'profile.json'), '{invalid json}', 'utf-8');
 
-    const hooks = await mod.default({ worktree: tmpDir });
+    const hooks = await pluginServer(mod)({ worktree: tmpDir });
 
     // Should return default profile instead of throwing
     const result = await hooks.tool['profile-summary'].execute();
@@ -816,7 +827,7 @@ async function testUserProfilingPlugin() {
   // 5.6 profile-insights works on empty state
   await testAsync('profile-insights handles empty state gracefully', async () => {
     const mod = await import(join(SRC, 'user-profiling', 'index.js'));
-    const hooks = await mod.default({ worktree: tmpDir });
+    const hooks = await pluginServer(mod)({ worktree: tmpDir });
 
     const result = await hooks.tool['profile-insights'].execute();
     const parsed = JSON.parse(result);
@@ -829,7 +840,7 @@ async function testUserProfilingPlugin() {
   // 5.7 system.transform injects profile context
   await testAsync('user-profiling system.transform injects profile', async () => {
     const mod = await import(join(SRC, 'user-profiling', 'index.js'));
-    const hooks = await mod.default({ worktree: tmpDir });
+    const hooks = await pluginServer(mod)({ worktree: tmpDir });
 
     const xfrm = hooks['experimental.chat.system.transform'];
     const input = { messages: [{ role: 'user', content: 'test' }] };
@@ -845,7 +856,7 @@ async function testUserProfilingPlugin() {
   // 5.8 messages.transform runs without error
   await testAsync('user-profiling messages.transform runs without error', async () => {
     const mod = await import(join(SRC, 'user-profiling', 'index.js'));
-    const hooks = await mod.default({ worktree: tmpDir });
+    const hooks = await pluginServer(mod)({ worktree: tmpDir });
 
     const xfrm = hooks['experimental.chat.messages.transform'];
     await xfrm(
@@ -857,7 +868,7 @@ async function testUserProfilingPlugin() {
   // 5.9 config hook sets tool permissions
   await testAsync('user-profiling config hook sets permissions', async () => {
     const mod = await import(join(SRC, 'user-profiling', 'index.js'));
-    const hooks = await mod.default({ worktree: tmpDir });
+    const hooks = await pluginServer(mod)({ worktree: tmpDir });
 
     const config = {};
     await hooks.config(config);
@@ -905,13 +916,14 @@ tools: ["bash", "read"]
   // 6.1 Module loads correctly
   await testAsync('skill-lifecycle module imports as ESM with default function', async () => {
     const mod = await import(join(SRC, 'skill-lifecycle', 'index.js'));
-    assert(typeof mod.default === 'function', 'default export must be a function');
+    assert(mod.default !== null && typeof mod.default === 'object', 'default export must be an object');
+    assert(typeof mod.default.server === 'function', 'must have server() factory');
   });
 
   // 6.2 Plugin returns hooks with expected tools
   await testAsync('skill-lifecycle returns hooks with 5 tools', async () => {
     const mod = await import(join(SRC, 'skill-lifecycle', 'index.js'));
-    const hooks = await mod.default({ worktree: tmpDir });
+    const hooks = await pluginServer(mod)({ worktree: tmpDir });
 
     assert(hooks !== null && typeof hooks === 'object', 'hooks must be an object');
     assert(typeof hooks.tool === 'object', 'must register tools');
@@ -929,7 +941,7 @@ tools: ["bash", "read"]
   // 6.3 skill-stats returns correct structure
   await testAsync('skill-stats returns stats with expected fields', async () => {
     const mod = await import(join(SRC, 'skill-lifecycle', 'index.js'));
-    const hooks = await mod.default({ worktree: tmpDir });
+    const hooks = await pluginServer(mod)({ worktree: tmpDir });
 
     const result = await hooks.tool['skill-stats'].execute();
     const parsed = JSON.parse(result);
@@ -950,7 +962,7 @@ tools: ["bash", "read"]
   // 6.4 skill-verify validates SKILL.md
   await testAsync('skill-verify checks SKILL.md structure', async () => {
     const mod = await import(join(SRC, 'skill-lifecycle', 'index.js'));
-    const hooks = await mod.default({ worktree: tmpDir });
+    const hooks = await pluginServer(mod)({ worktree: tmpDir });
 
     const result = await hooks.tool['skill-verify'].execute({ name: 'lifecycle-test' });
     const parsed = JSON.parse(result);
@@ -965,7 +977,7 @@ tools: ["bash", "read"]
   // 6.5 skill-verify for non-existent returns error
   await testAsync('skill-verify handles missing skill gracefully', async () => {
     const mod = await import(join(SRC, 'skill-lifecycle', 'index.js'));
-    const hooks = await mod.default({ worktree: tmpDir });
+    const hooks = await pluginServer(mod)({ worktree: tmpDir });
 
     const result = await hooks.tool['skill-verify'].execute({ name: 'no-such-skill' });
     const parsed = JSON.parse(result);
@@ -977,7 +989,7 @@ tools: ["bash", "read"]
     // 6.6 Deprecation: skill-deprecate marks skill as deprecated
   await testAsync('skill-deprecate marks skill as deprecated', async () => {
     const mod = await import(join(SRC, 'skill-lifecycle', 'index.js'));
-    const hooks = await mod.default({ worktree: tmpDir });
+    const hooks = await pluginServer(mod)({ worktree: tmpDir });
 
     const result = await hooks.tool['skill-deprecate'].execute({
       name: 'lifecycle-test',
@@ -994,7 +1006,7 @@ tools: ["bash", "read"]
   // 6.7 Deprecation: skill-deprecate reinstate works
   await testAsync('skill-deprecate reinstate restores skill', async () => {
     const mod = await import(join(SRC, 'skill-lifecycle', 'index.js'));
-    const hooks = await mod.default({ worktree: tmpDir });
+    const hooks = await pluginServer(mod)({ worktree: tmpDir });
 
     const result = await hooks.tool['skill-deprecate'].execute({
       name: 'lifecycle-test',
@@ -1009,7 +1021,7 @@ tools: ["bash", "read"]
   // 6.8 Deprecation: skill-deprecate on non-existent returns error
   await testAsync('skill-deprecate handles missing skill gracefully', async () => {
     const mod = await import(join(SRC, 'skill-lifecycle', 'index.js'));
-    const hooks = await mod.default({ worktree: tmpDir });
+    const hooks = await pluginServer(mod)({ worktree: tmpDir });
 
     const result = await hooks.tool['skill-deprecate'].execute({
       name: 'no-such-skill',
@@ -1024,7 +1036,7 @@ tools: ["bash", "read"]
   // 6.9 skill-versions for non-existent returns error
   await testAsync('skill-versions handles missing skill gracefully', async () => {
     const mod = await import(join(SRC, 'skill-lifecycle', 'index.js'));
-    const hooks = await mod.default({ worktree: tmpDir });
+    const hooks = await pluginServer(mod)({ worktree: tmpDir });
 
     const result = await hooks.tool['skill-versions'].execute({ name: 'no-such-skill' });
     const parsed = JSON.parse(result);
@@ -1035,7 +1047,7 @@ tools: ["bash", "read"]
   // 6.10 system.transform runs without error
   await testAsync('skill-lifecycle system.transform runs without error', async () => {
     const mod = await import(join(SRC, 'skill-lifecycle', 'index.js'));
-    const hooks = await mod.default({ worktree: tmpDir });
+    const hooks = await pluginServer(mod)({ worktree: tmpDir });
 
     const xfrm = hooks['experimental.chat.system.transform'];
     const input = { messages: [{ role: 'user', content: 'test' }] };
@@ -1052,7 +1064,7 @@ tools: ["bash", "read"]
   // 6.11 config hook sets tool permissions
   await testAsync('skill-lifecycle config hook sets permissions', async () => {
     const mod = await import(join(SRC, 'skill-lifecycle', 'index.js'));
-    const hooks = await mod.default({ worktree: tmpDir });
+    const hooks = await pluginServer(mod)({ worktree: tmpDir });
 
     const config = {};
     await hooks.config(config);
@@ -1093,14 +1105,15 @@ async function testRemoteExecutionPlugin() {
   // 7.1 Module loads correctly
   await testAsync('remote-execution module imports as ESM with default function', async () => {
     const mod = await import(join(SRC, 'remote-execution', 'index.js'));
-    assert(typeof mod.default === 'function', 'default export must be a function');
+    assert(mod.default !== null && typeof mod.default === 'object', 'default export must be an object');
+    assert(typeof mod.default.server === 'function', 'must have server() factory');
   });
 
   try {
     // 7.2 Plugin returns hooks with expected tools
     await testAsync('remote-execution returns hooks with run-on and list-targets', async () => {
       const mod = await import(join(SRC, 'remote-execution', 'index.js'));
-      const hooks = await mod.default({});
+      const hooks = await pluginServer(mod)({});
 
       assert(hooks !== null && typeof hooks === 'object', 'hooks must be an object');
       assert(typeof hooks.tool === 'object', 'must register tools');
@@ -1116,7 +1129,7 @@ async function testRemoteExecutionPlugin() {
     // 7.3 list-targets includes built-in "local" and configured targets
     await testAsync('list-targets returns local + configured targets', async () => {
       const mod = await import(join(SRC, 'remote-execution', 'index.js'));
-      const hooks = await mod.default({});
+      const hooks = await pluginServer(mod)({});
 
       const result = await hooks.tool['list-targets'].execute();
       const parsed = JSON.parse(result);
@@ -1130,7 +1143,7 @@ async function testRemoteExecutionPlugin() {
     // 7.4 run-on returns error for unknown target
     await testAsync('run-on returns error for unknown target', async () => {
       const mod = await import(join(SRC, 'remote-execution', 'index.js'));
-      const hooks = await mod.default({});
+      const hooks = await pluginServer(mod)({});
 
       const result = await hooks.tool['run-on'].execute({
         target: 'nonexistent-target',
@@ -1146,7 +1159,7 @@ async function testRemoteExecutionPlugin() {
     // 7.5 run-on with 'local' target executes
     await testAsync('run-on local target executes successfully', async () => {
       const mod = await import(join(SRC, 'remote-execution', 'index.js'));
-      const hooks = await mod.default({});
+      const hooks = await pluginServer(mod)({});
 
       const result = await hooks.tool['run-on'].execute({
         target: 'local',
@@ -1163,7 +1176,7 @@ async function testRemoteExecutionPlugin() {
     // 7.6 run-on local target error handling
     await testAsync('run-on local target captures non-zero exit', async () => {
       const mod = await import(join(SRC, 'remote-execution', 'index.js'));
-      const hooks = await mod.default({});
+      const hooks = await pluginServer(mod)({});
 
       const result = await hooks.tool['run-on'].execute({
         target: 'local',
@@ -1178,7 +1191,7 @@ async function testRemoteExecutionPlugin() {
     // 7.7 run-on has correct args structure
     await testAsync('run-on args include target, command, timeout', async () => {
       const mod = await import(join(SRC, 'remote-execution', 'index.js'));
-      const hooks = await mod.default({});
+      const hooks = await pluginServer(mod)({});
 
       const runTool = hooks.tool['run-on'];
       assert(runTool.args !== undefined, 'args must be defined');
@@ -1190,7 +1203,7 @@ async function testRemoteExecutionPlugin() {
     // 7.8 config hook sets permission
     await testAsync('remote-execution config hook sets run-on permission', async () => {
       const mod = await import(join(SRC, 'remote-execution', 'index.js'));
-      const hooks = await mod.default({});
+      const hooks = await pluginServer(mod)({});
 
       const config = {};
       await hooks.config(config);

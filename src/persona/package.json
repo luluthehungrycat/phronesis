@@ -13,7 +13,7 @@
     ]
   },
   "dependencies": {
-    "@opencode-ai/plugin": "^1.14.19"
+    "@opencode-ai/plugin": "^1.18.31"
   },
   "overrides": {
     "toml": "4.3.0"

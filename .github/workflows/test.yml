@@ -37,6 +37,9 @@ jobs:
       - name: Run container / plugin tests
         run: npm test
 
+      - name: Run OpenCode v1 plugin contract test
+        run: node tests/opencode-plugin-compat.mjs
+
       - name: Run CLI unit tests
         run: npm test
         working-directory: ./cli

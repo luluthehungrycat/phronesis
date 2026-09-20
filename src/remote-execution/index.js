@@ -169,7 +169,7 @@ function executeSSH(target, command, timeout) {
 // ---------------------------------------------------------------------------
 // Plugin entrypoint
 // ---------------------------------------------------------------------------
-export default async function plugin(ctx) {
+async function plugin(ctx) {
   const targets = loadTargets();
   const tgConfig = getTelegramConfig(ctx?.config);
 
@@ -263,3 +263,4 @@ export default async function plugin(ctx) {
     },
   };
 }
+export default { id: "opencode-remote-execution", server: plugin };

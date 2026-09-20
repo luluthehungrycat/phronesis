@@ -519,7 +519,7 @@ function buildPersonaGuidance(persona) {
 // ---------------------------------------------------------------------------
 // Plugin entrypoint
 // ---------------------------------------------------------------------------
-export default async function plugin(ctx) {
+async function plugin(ctx) {
   const worktree = ctx?.worktree || ctx?.project?.worktree || process.cwd();
   const tgConfig = getTelegramConfig(ctx?.config);
 
@@ -843,3 +843,4 @@ export default async function plugin(ctx) {
     },
   };
 }
+export default { id: "opencode-persona", server: plugin };

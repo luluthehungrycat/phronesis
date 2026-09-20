@@ -249,7 +249,7 @@ function buildFactContext(userInput, maxFacts) {
 // ---------------------------------------------------------------------------
 // Plugin entrypoint
 // ---------------------------------------------------------------------------
-export default async function plugin(ctx) {
+async function plugin(ctx) {
 
   // Initialize DB on load (non-blocking — will lazy-init on first access)
   try { getDb(); } catch { /* will init on first tool use */ }
@@ -877,3 +877,4 @@ export default async function plugin(ctx) {
     },
   };
 }
+export default { id: "opencode-memory-consolidation", server: plugin };
