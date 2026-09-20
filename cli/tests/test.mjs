@@ -23,6 +23,7 @@ process.env.HOME = TMP_HOME;
 let passed = 0;
 let failed = 0;
 let currentGroup = "";
+const asyncTests = [];
 
 function group(name) {
   currentGroup = name;
@@ -42,17 +43,19 @@ function test(name, fn) {
   }
 }
 
-async function testAsync(name, fn) {
-  try {
-    await fn();
-    passed++;
-    console.log(`    ✓ ${name}`);
-  } catch (e) {
-    failed++;
-    const msg = e.message.split("\n")[0];
-    console.log(`    ✗ ${name}`);
-    console.log(`      ${msg}`);
-  }
+function testAsync(name, fn) {
+  asyncTests.push((async () => {
+    try {
+      await fn();
+      passed++;
+      console.log(`    ✓ ${name}`);
+    } catch (e) {
+      failed++;
+      const msg = e.message.split("\n")[0];
+      console.log(`    ✗ ${name}`);
+      console.log(`      ${msg}`);
+    }
+  })());
 }
 
 // ─── Assertions ─────────────────────────────────────────────────────────────
@@ -325,27 +328,16 @@ testAsync("resolveProfile falls back to active profile", async () => {
 });
 
 testAsync("resolveOpenCodeBinary falls back to 'opencode' when not on PATH", async () => {
-  const origPath = process.env.PATH;
-  process.env.PATH = "/dev/null";
-  try {
-    const opencode = await import("../src/lib/opencode.js");
-    assertEq(opencode.resolveOpenCodeBinary(), "opencode");
-  } finally {
-    process.env.PATH = origPath;
-  }
+  const opencode = await import("../src/lib/opencode.js");
+  assertEq(opencode.resolveOpenCodeBinary({ locations: [] }), "opencode");
 });
 
 testAsync("opencodeAvailable returns false when binary missing", async () => {
-  const origPath = process.env.PATH;
-  process.env.PATH = "/dev/null";
-  try {
-    // Need fresh import with new PATH
-    const opencode = await import("../src/lib/opencode.js");
-    const available = opencode.opencodeAvailable();
-    assertEq(available, false);
-  } finally {
-    process.env.PATH = origPath;
-  }
+  const opencode = await import("../src/lib/opencode.js");
+  const available = opencode.opencodeAvailable({
+    binary: "/definitely-not-a-real-opencode-binary",
+  });
+  assertEq(available, false);
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -409,20 +401,17 @@ testAsync("buildCli does not throw", async () => {
 
 testAsync("all commands are registered", async () => {
   const mod = await import("../src/cli.js");
-  const commands = mod.cli.getCommandInstance().getCommands();
-  const names = commands.map((c) => (Array.isArray(c) ? c[0] : c));
+  const helpText = await mod.cli.getHelp();
   const expected = ["config", "profile", "completion", "doctor", "setup", "send", "migrate", "gateway", "skills", "sessions"];
   for (const cmd of expected) {
-    const found = names.some((n) => n.includes(cmd) || n === cmd);
-    assert(found, `command "${cmd}" not found in ${JSON.stringify(names)}`);
+    assert(helpText.includes(cmd), `command "${cmd}" not found in help output`);
   }
 });
 
 testAsync("chat command is registered", async () => {
   const mod = await import("../src/cli.js");
-  const commands = mod.cli.getCommandInstance().getCommands();
-  const names = commands.map((c) => (Array.isArray(c) ? c[0] : c));
-  assert(names.some((n) => n.includes("chat") || n.includes("$0")), "chat / $0 command");
+  const helpText = await mod.cli.getHelp();
+  assert(helpText.includes("chat") || helpText.includes("phronesis [query]"), "chat / default command present");
 });
 
 testAsync("global options exist on yargs instance", async () => {
@@ -509,9 +498,7 @@ testAsync("getProfileConfig returns fallback for missing profile", async () => {
 console.log(`\nPhronesis CLI Test Suite`);
 console.log(`  HOME: ${TMP_HOME}`);
 
-// Import triggers will settle as we await them above.
-// Just wait a tick for any queued asyncs.
-await new Promise((r) => setTimeout(r, 100));
+await Promise.all(asyncTests);
 
 const total = passed + failed;
 console.log(`\n  Results: ${passed} passed, ${failed} failed, ${total} total\n`);
