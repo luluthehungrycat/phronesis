@@ -502,7 +502,7 @@ export default async function plugin(ctx) {
             if (!meta?.deprecation) continue;
 
             const deprecatedAt = meta.updatedAt ? new Date(meta.updatedAt).getTime() : 0;
-            if (deprecatedAt > 0 && deprecatedAt < cutoff) {
+            if (deprecatedAt > 0 && (args.days === 0 || deprecatedAt < cutoff)) {
               toRemove.push({ name, deprecatedOn: meta.updatedAt, reason: meta.deprecation });
             }
           }
