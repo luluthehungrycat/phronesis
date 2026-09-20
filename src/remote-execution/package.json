@@ -8,5 +8,8 @@
   },
   "dependencies": {
     "@opencode-ai/plugin": "^1"
+  },
+  "overrides": {
+    "toml": "4.3.0"
   }
 }
