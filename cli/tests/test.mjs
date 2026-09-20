@@ -402,7 +402,7 @@ testAsync("buildCli does not throw", async () => {
 testAsync("all commands are registered", async () => {
   const mod = await import("../src/cli.js");
   const helpText = await mod.cli.getHelp();
-  const expected = ["config", "profile", "completion", "doctor", "setup", "send", "migrate", "gateway", "skills", "sessions"];
+  const expected = ["config", "profile", "completion", "doctor", "setup", "send", "migrate", "gateway", "skills", "sessions", "plugin"];
   for (const cmd of expected) {
     assert(helpText.includes(cmd), `command "${cmd}" not found in help output`);
   }
