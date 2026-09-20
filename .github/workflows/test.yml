@@ -73,7 +73,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: servers/serve-2/Dockerfile
+          file: servers/serve/Dockerfile
           push: false
           tags: phronesis:ci-${{ github.sha }}
           cache-from: type=gha

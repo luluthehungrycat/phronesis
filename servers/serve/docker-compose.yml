@@ -1,11 +1,11 @@
 # ──────────────────────────────────────────────────────────
-# Phronesis serve-2 — Containerized OpenCode server
+# Phronesis serve — Containerized OpenCode server
 # ──────────────────────────────────────────────────────────
 services:
   server:
     build:
       context: ../..
-      dockerfile: servers/serve-2/Dockerfile
+      dockerfile: servers/serve/Dockerfile
     image: phronesis-serve:latest
     container_name: phronesis-server
     ports:

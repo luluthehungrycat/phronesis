@@ -13,7 +13,7 @@
 {
   "targets": [
     {"label": "local", "type": "local"},
-    {"label": "serve-2", "type": "container", "address": "phronesis-serve-2", "runtime": "podman"},
+    {"label": "serve", "type": "container", "address": "phronesis-serve", "runtime": "podman"},
     {"label": "server", "type": "ssh", "address": "user@host"}
   ]
 }
