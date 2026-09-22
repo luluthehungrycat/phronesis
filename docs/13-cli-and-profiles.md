@@ -72,7 +72,7 @@ phronesis send
 phronesis create-plugin <name>       → Scaffold a new Phronesis plugin
 
 phronesis dashboard [--port <N>]     → Launch web dashboard (sessions, config, gateway)
-phronesis plugin [search|info|list]  → Browse plugin registry
+phronesis plugin [search|info|list|install] → Browse or install plugins
 phronesis setup                      → Interactive first-run wizard
 phronesis doctor                     → Diagnostics / system check
 phronesis version                    → Show version info
@@ -102,7 +102,7 @@ phronesis migrate
 | `hermes send` | `phronesis send telegram ...` | Only Telegram initially |
 | `hermes doctor` | `phronesis doctor` | Phronesis-specific diagnostics |
 | `hermes claw migrate [--dry-run]` | `phronesis migrate claw [--dry-run]` | Same flag |
-| `hermes dashboard` | `phronesis dashboard` | Launches web dashboard (Phase 3) |
+| `hermes dashboard` | `phronesis dashboard` | Launches the implemented dashboard command |
 | `hermes completion [bash\|zsh\|fish]` | `phronesis completion [bash\|zsh\|fish]` | Same behavior |
 | `hermes version` | `phronesis version` | Trivial |
 | `hermes model` | `phronesis config get defaults.model` | Use the implemented config command |
@@ -160,7 +160,8 @@ defaults:
 # Global MCP configuration (shared across profiles)
 mcp:
   agentmail:
-    enabled: true
+    # Opt-in example; add credentials through the supported auth mechanism.
+    enabled: false
     url: "https://mcp.agentmail.to/mcp"
   context7:
     enabled: true
@@ -468,7 +469,7 @@ curl -fsSL https://raw.githubusercontent.com/luluthehungrycat/phronesis/main/ins
 | AgentMail MCP | 🔶 Optional | Configure the MCP server and credentials before use |
 | Dogfood | 🔶 Ongoing | Active via Bot 2 |
 | Polish | 🔶 Ongoing | Fix as encountered |
-| CLI scaffold | ✅ **Phase 1a+1b+1c+2+3 complete** | 17 commands: chat, continue, fork, version, config, profile, gateway (status/start/stop/restart/logs/install/uninstall), skills (list/install/update/feedback), sessions (list/search/rebuild), create-plugin, plugin (search/info/list), dashboard, completion, doctor, setup, send, migrate |
+| CLI scaffold | ✅ **Phase 1a+1b+1c+2+3 complete** | Core commands include chat, continue, fork, version, config, profile, gateway, skills, sessions, create-plugin, plugin (search/info/list/install), dashboard, completion, doctor, setup, send, and migrate |
 | Search index | ✅ **FTS5 rebuild** | 3907+ rows indexed from opencode.db |
 | Container HEALTHCHECK | ✅ **serve** | Curl-based health check added to Dockerfile |
 | Session-search plugin | ✅ **Refactored** | Fixed execSync→spawnSync, sqlEscape, snippet column index |

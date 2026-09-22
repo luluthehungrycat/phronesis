@@ -109,7 +109,7 @@ All from a single gateway process sharing memory, skills, and tools.
 | Auto-skill creation      | ✅ After complex/tricky tasks            | ❌ Not available                        | **GAP**                |
 | Self-improving skills    | ✅ Patch when stale                      | ❌ Static SKILL.md files                | **GAP**                |
 | Multi-platform gateway   | ✅ 6 platforms + CLI                     | ❌ TUI/CLI/Desktop only                 | **GAP (big)**          |
-| Cron scheduling          | ✅ Built-in, platform delivery           | ✅ scheduler plugin                     | **Covered** (partial)  |
+| Cron scheduling          | ✅ Built-in, platform delivery           | ⚠️ Heartbeat overdue detection; scheduler integration planned | **Partial / planned** |
 | Remote execution         | ✅ Docker/SSH/Modal/Daytona/Singularity  | ⚠️ Partial via MCP                      | **GAP**                |
 | Persona system           | ✅ SOUL.md structured persona            | ⚠️ Agent prompts/instructions           | **Partial**            |
 | Subagent delegation      | ✅ Python RPC subagents                  | ✅ task tool subagents                  | **Covered**             |

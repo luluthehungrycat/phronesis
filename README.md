@@ -80,8 +80,8 @@ tests/
 
 | Platform | Component | Status | Details |
 |----------|-----------|--------|---------|
-| Telegram | Bot 1 | ✅ Production | `opencode-telegram.service`, port 4096 (legacy) |
-| Telegram | Bot 2 | ✅ Production | Phronesis container (`phronesis-test`), port 4098, HEALTHCHECK enabled |
+| Telegram | Bot 1 | Configuration-dependent | `opencode-telegram.service`, port 4096 (legacy) |
+| Telegram | Bot 2 | Configuration-dependent | Phronesis container (`phronesis-test`), health check available |
 | Telegram | Send CLI | ✅ `phronesis send telegram` | One-off messages via Bot API |
 | Webhook | Send CLI | ✅ `phronesis send webhook` | Generic JSON POST to any URL |
 | Slack | Send CLI | ✅ `phronesis send slack` | Slack-compatible webhook payload |
