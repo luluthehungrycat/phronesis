@@ -110,18 +110,15 @@ The bot provides full Telegram-native interaction with OpenCode:
 
 ## How It Connects to Phronesis Plugins
 
-The Telegram bot communicates with `opencode serve`, which loads all configured plugins. This means **all Phronesis plugins are automatically available through Telegram**:
+The Telegram bot communicates with `opencode serve`, which loads the plugins listed in the target OpenCode configuration. Source packages in this repository are not automatically active until they are registered in that configuration. The current repository `opencode.json` registers `opencode-injection-guard`; operators must add and verify any other Phronesis plugins before claiming they are available through Telegram.
 
 | Plugin | Available via Telegram |
 |--------|----------------------|
-| `skill-creator` | ✅ Agent can call `save-skill`, `list-skills`, `update-skill`, `skill-feedback` via Telegram |
-| `session-search` | ✅ Agent can call `search-sessions` via Telegram |
-| `supermemory` | ✅ Agent can access persistent memory via Telegram |
-| `opencode-scheduler` | ✅ `/schedule` and `/tasks` commands |
-| `opencode-pty` | ✅ Background process management |
-| `octto` | ✅ Brainstorming (via browser) |
+| `opencode-injection-guard` | ✅ Registered in the repository configuration |
+| Phronesis plugins | ⚠️ Available after explicit registration and runtime verification |
+| External plugins and gateways | ⚠️ Configuration-dependent |
 
-No additional integration needed — the bot delegates all LLM interactions to the OpenCode server, which runs the plugin pipeline.
+The bot delegates LLM interactions to the OpenCode server; plugin availability still follows the server's explicit configuration.
 
 ---
 

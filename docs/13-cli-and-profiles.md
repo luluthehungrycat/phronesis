@@ -242,7 +242,7 @@ exec phronesis "$@" --profile work
 This means:
 - `work chat "hello"` → `phronesis chat "hello" --profile work`
 - `work gateway status` → `phronesis gateway status --profile work`
-- `work config get model` → `phronesis config get model --profile work`
+- `work config get defaults.model` → `phronesis config get defaults.model --profile work`
 
 The scripts are created on `phronesis profile create <name>` and removed on `phronesis profile delete <name>`.
 

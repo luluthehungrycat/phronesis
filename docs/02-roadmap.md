@@ -87,10 +87,10 @@ User query → FTS5 search on sessions.db → Rank results
 **Depends on**: local SQLite/FTS5 storage; optional Supermemory integration. Scheduler-driven maintenance remains planned.
 
 **What it does**:
-- Cron-triggered background task (e.g., every 6 hours)
+- Provides consolidation tools and heartbeat-based overdue detection; scheduler integration remains planned
 - Reviews recent sessions since last consolidation
 - Extracts durable facts: user preferences, project decisions, environment changes
-- Compacts into supermemory or local vector DB
+- Stores facts and observations in local SQLite/FTS5, with optional Supermemory push
 - Prunes redundant/outdated memories
 - Reports: "Consolidated N new facts from M sessions"
 

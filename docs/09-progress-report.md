@@ -20,7 +20,7 @@ Phronesis has delivered all planned Phase 🟢 and Phase 🟡 capabilities:
 - **Multi-instance Telegram gateway** with 2 bot instances (Phase 🔴 MVP)
 - **AgentMail MCP** configured for email gateway
 
-All 7 plugins are registered in the workspace `opencode.json` and active on bot2 (port 4097) via the `phronesis-serve` container. The Telegram gateway routes both bot instances through OpenCode, giving all Phronesis plugins automatic Telegram availability.
+The repository contains seven Phronesis plugin packages, covered by behavior and OpenCode compatibility tests. The current workspace `opencode.json` registers `opencode-injection-guard`; the other packages require explicit registration and runtime verification before they can be described as active in a deployed OpenCode server or available through Telegram.
 
 **Key milestone**: All plugin tools now have explicit `"allow"` permissions at both top-level and per-agent (build, orchestrator), and agent prompts include structured MUST/SHOULD guidance forcing the model to use memory, skills, profile, and session search tools.
 
@@ -155,12 +155,10 @@ Builds longitudinal user models from session interactions. Tracks communication 
                     │  opencode serve (port 4096)  │
                     │  ┌────────────────────────┐  │
                     │  │   Plugin Pipeline      │  │
-                    │  │  - skill-creator       │  │
-                    │  │  - session-search      │  │
-                    │  │  - persona             │  │
-                    │  │  - memory-consolidation│  │
-                    │  │  - supermemory         │  │
-                    │  │  - scheduler, etc.     │  │
+                    │  │  (configuration-based) │  │
+                    │  │  injection-guard       │  │
+                    │  │  + explicitly enabled  │  │
+                    │  │    Phronesis plugins   │  │
                     │  └────────────────────────┘  │
                     └──────────┬──────────────────┘
                               │
