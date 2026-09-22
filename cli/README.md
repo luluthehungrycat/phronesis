@@ -11,7 +11,7 @@ npm install -g phronesis
 Or via the install script:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/luluthehungrycat/phronesis/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/luluthehungrycat/phronesis/master/install.sh | bash
 ```
 
 ## Quick Start
@@ -38,6 +38,8 @@ phronesis doctor
 | `phronesis config get\|set\|path\|edit` | Configuration management |
 | `phronesis profile list\|use\|create\|delete\|current\|path` | Profile management |
 | `phronesis gateway status\|start\|stop\|restart\|logs\|install\|uninstall` | Gateway service management |
+| `phronesis plugin search\|info\|list\|install` | Plugin registry and installation |
+| `phronesis dashboard` | Launch the dashboard |
 | `phronesis sessions list\|search\|rebuild` | Session search (FTS5) |
 | `phronesis skills list\|install\|update\|feedback` | Skill management |
 | `phronesis send telegram\|webhook\|slack\|discord` | One-shot messages |
@@ -47,6 +49,7 @@ phronesis doctor
 | `phronesis doctor` | Diagnostics |
 | `phronesis version` | Version info |
 | `phronesis completion [bash\|zsh\|fish]` | Shell completions |
+| `phronesis upgrade` | Check for and install CLI upgrades |
 
 All session commands accept `--profile <name>` to target a specific profile.
 

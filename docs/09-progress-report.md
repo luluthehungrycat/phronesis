@@ -2,27 +2,27 @@
 
 > **Date**: June 2026
 > **Commits**: 12
-> **Tests**: 78/78 passing
-> **Plugins**: 7 deployed
-> **Gateway**: Telegram (2 instances) + AgentMail MCP
+> **Tests**: plugin and CLI suites verified in CI
+> **Plugins**: 7 packages implemented/tested; explicit registration required
+> **Gateway**: Telegram path documented; AgentMail optional and unconfigured by default
 
 ---
 
 ## Executive Summary
 
-Phronesis has delivered all planned Phase 🟢 and Phase 🟡 capabilities:
+Phronesis has implemented the following Phase 🟢 and Phase 🟡 capability packages; deployment and activation remain configuration-dependent:
 
 - **Auto-skill creation** from complex agent workflows (P1)
 - **FTS5 session search** over past conversations (P2)
 - **Skill improvement pipeline** with feedback and dedup (P3, built into P1)
 - **Structured persona system** with Hermes SOUL.md compatibility (P4)
 - **Local-first memory consolidation** with optional Supermemory push (P5)
-- **Multi-instance Telegram gateway** with 2 bot instances (Phase 🔴 MVP)
-- **AgentMail MCP** configured for email gateway
+- **Multi-instance Telegram gateway** deployment documentation (Phase 🔴 MVP)
+- **AgentMail MCP** documented as an optional email integration
 
-All 7 plugins are registered in the workspace `opencode.json` and active on bot2 (port 4097) via the `phronesis-serve` container. The Telegram gateway routes both bot instances through OpenCode, giving all Phronesis plugins automatic Telegram availability.
+The repository contains seven Phronesis plugin packages, covered by behavior and OpenCode compatibility tests. The current workspace `opencode.json` registers `opencode-injection-guard`; the other packages require explicit registration and runtime verification before they can be described as active in a deployed OpenCode server or available through Telegram.
 
-**Key milestone**: All plugin tools now have explicit `"allow"` permissions at both top-level and per-agent (build, orchestrator), and agent prompts include structured MUST/SHOULD guidance forcing the model to use memory, skills, profile, and session search tools.
+**Verification note**: Plugin behavior and OpenCode loader compatibility are tested in CI; runtime activation still depends on explicit registration and deployment configuration.
 
 ---
 
@@ -143,9 +143,9 @@ Builds longitudinal user models from session interactions. Tracks communication 
 
 | Platform | Component | Status | Details |
 |----------|-----------|--------|---------|
-| **Telegram** | Bot 1 | ✅ Running | `opencode-telegram.service` — v0.20.1, port 4096 |
-| **Telegram** | Bot 2 | ✅ Running | `opencode-telegram-2.service` — v0.20.1, port 4097 |
-| **Email** | AgentMail MCP | ✅ Configured | `mcp.agentmail.to` remote MCP (needs API key) |
+| **Telegram** | Bot 1 | Configuration-dependent | `opencode-telegram.service` — v0.20.1, port 4096 |
+| **Telegram** | Bot 2 | Configuration-dependent | `opencode-telegram-2.service` — v0.20.1, port 4097 |
+| **Email** | AgentMail MCP | Optional | `mcp.agentmail.to` remote MCP; requires explicit configuration and credentials |
 | **CLI** | Native | ✅ Always available | Direct terminal |
 
 ### Architecture
@@ -155,12 +155,10 @@ Builds longitudinal user models from session interactions. Tracks communication 
                     │  opencode serve (port 4096)  │
                     │  ┌────────────────────────┐  │
                     │  │   Plugin Pipeline      │  │
-                    │  │  - skill-creator       │  │
-                    │  │  - session-search      │  │
-                    │  │  - persona             │  │
-                    │  │  - memory-consolidation│  │
-                    │  │  - supermemory         │  │
-                    │  │  - scheduler, etc.     │  │
+                    │  │  (configuration-based) │  │
+                    │  │  injection-guard       │  │
+                    │  │  + explicitly enabled  │  │
+                    │  │    Phronesis plugins   │  │
                     │  └────────────────────────┘  │
                     └──────────┬──────────────────┘
                               │
@@ -178,7 +176,7 @@ Both Telegram bots share the same session database on disk (both ultimately go t
 
 ## 3. Test Coverage
 
-**Total tests**: 78 — **All passing**
+**Coverage**: The test suites cover the following areas; current counts and pass/fail state are reported by CI.
 
 | Section | Tests | What It Covers |
 |---------|-------|-----------------|
@@ -197,7 +195,9 @@ Test infrastructure: Podman/Docker container with multi-stage build, OpenCode bi
 
 ---
 
-## 4. Deployment Architecture
+## 4. Example Deployment Architecture
+
+The following is an optional historical/example layout, not a claim about the checked-in runtime deployment. Services, ports, plugin registration, and data paths must be verified for each operator environment.
 
 ```
 Systemd Units:
@@ -260,7 +260,7 @@ Data:
 ### Long Term
 - Full skill lifecycle: auto-verification, metrics, deprecation
 - Honcho integration for user profiling
-- Hermes gateway bridge for expanded platform support
+- Optional future Hermes MCP/API interoperability for expanded platform support, evaluated only after the native Phronesis/OpenCode gateway path is reliable
 
 ---
 

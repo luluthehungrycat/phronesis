@@ -2,7 +2,9 @@
 
 **Practical wisdom from agent experience.**  
 
-Phronesis bridges the gap between OpenCode's powerful plugin ecosystem and Hermes Agent's adaptive learning capabilities. It brings auto-skill creation, session memory, self-improving skills, and intelligent experience reuse to OpenCode — turning raw agent interactions into compounding practical wisdom.
+Phronesis is a standalone product built on OpenCode. It supplies the plugins and product-level CLI wrapper needed to make OpenCode behave more like the Hermes-inspired experience we want to provide: `phronesis <subcommand> <arguments>` runs the implemented functionality through OpenCode.
+
+Hermes Agent is an inspiration and behavioral reference, not a runtime dependency or service boundary. Interoperability with Hermes through MCP or an API may be considered later, but it is not a current priority.
 
 ## Why
 
@@ -58,7 +60,7 @@ servers/
 tests/
 └── container/                   Podman/Docker test container
     ├── Dockerfile               Multi-stage build
-    ├── test.mjs                 78-test suite (70/78 pass in Alpine, 8 need musl-native better-sqlite3)
+    ├── test.mjs                 Container and plugin test runner
     └── entrypoint.sh            Test runner with serve mode support
 ```
 
@@ -66,26 +68,33 @@ tests/
 
 | Plugin | Phase | Tests | Status |
 |--------|-------|-------|--------|
-| `skill-creator` | 🟢 P1 | ✅ 78/78 | Active |
-| `session-search` | 🟢 P2 | ✅ 78/78 | Active |
-| `persona` | 🟡 P4 | ✅ 78/78 | Active |
-| `memory-consolidation` | 🟡 P5 | ⚠️ 70/78 | Active (8 fail on musl — better-sqlite3 needs native rebuild) |
-| `remote-execution` | 🟡 P6 | ✅ 78/78 | Active |
-| `skill-lifecycle` | 🟡 P8 | ✅ 78/78 | Active |
-| `user-profiling` | 🟡 P9 | ✅ 78/78 | Active |
+| `skill-creator` | 🟢 P1 | ✅ Tested | Implemented; enable via OpenCode config |
+| `session-search` | 🟢 P2 | ✅ Tested | Implemented; enable via OpenCode config |
+| `persona` | 🟡 P4 | ✅ Tested | Implemented; enable via OpenCode config |
+| `memory-consolidation` | 🟡 P5 | ✅ Tested | Implemented; enable via OpenCode config |
+| `remote-execution` | 🟡 P6 | ✅ Tested | Implemented; enable via OpenCode config |
+| `skill-lifecycle` | 🟡 P8 | ✅ Tested | Implemented; enable via OpenCode config |
+| `user-profiling` | 🟡 P9 | ✅ Tested | Implemented; enable via OpenCode config |
 
 ### Gateway
 
 | Platform | Component | Status | Details |
 |----------|-----------|--------|---------|
-| Telegram | Bot 1 | ✅ Production | `opencode-telegram.service`, port 4096 (legacy) |
-| Telegram | Bot 2 | ✅ Production | Phronesis container (`phronesis-test`), port 4098, HEALTHCHECK enabled |
+| Telegram | Bot 1 | Configuration-dependent | `opencode-telegram.service`, port 4096 (legacy) |
+| Telegram | Bot 2 | Configuration-dependent | Phronesis container (`phronesis-test`), health check available |
 | Telegram | Send CLI | ✅ `phronesis send telegram` | One-off messages via Bot API |
 | Webhook | Send CLI | ✅ `phronesis send webhook` | Generic JSON POST to any URL |
 | Slack | Send CLI | ✅ `phronesis send slack` | Slack-compatible webhook payload |
 | Discord | Send CLI | ✅ `phronesis send discord` | Discord webhook with "Phronesis" username |
-| Email | AgentMail MCP | ✅ Configured | Remote MCP at `mcp.agentmail.to` (needs API key) |
+| Email | AgentMail MCP | Optional | Requires explicit MCP configuration and credentials |
 | CLI | Native | ✅ Always available | Direct terminal + `phronesis` wrapper |
+
+## Product Boundary
+
+- **OpenCode is the prerequisite runtime.** Phronesis runs OpenCode rather than replacing it.
+- **Phronesis is more than a plugin collection.** Plugins provide capabilities inside OpenCode; the CLI, profiles, configuration, services, and documentation form the standalone product.
+- **The CLI is the primary product interface.** Implemented Hermes-inspired operations are exposed as `phronesis` commands, with OpenCode doing the underlying agent work.
+- **Hermes is prior art, not a dependency.** We reproduce selected functionality and interaction patterns without making Hermes installation, APIs, or MCP connectivity prerequisites.
 
 ## Core Philosophy
 

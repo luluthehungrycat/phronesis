@@ -4,7 +4,7 @@
 
 ### Prerequisites
 - Node.js 22+ (ESM native)
-- OpenCode v1.15+ (binary at `~/.opencode/bin/opencode`)
+- OpenCode v1.18.31 or newer within the supported v1 API (binary at `~/.opencode/bin/opencode`)
 - Podman or Docker (for running tests in container)
 - npm (for plugin dependencies)
 
@@ -27,7 +27,7 @@ Add to `opencode.json`:
 
 ```json
 {
-  "plugins": [
+  "plugin": [
     "file:///home/user/phronesis/src/skill-creator",
     "file:///home/user/phronesis/src/session-search",
     "file:///home/user/phronesis/src/persona",
@@ -40,7 +40,7 @@ Each plugin also needs a permission entry for its tools. Example:
 
 ```json
 {
-  "permissions": {
+  "permission": {
     "save-skill": "allow",
     "list-skills": "allow",
     "search-sessions": "allow",

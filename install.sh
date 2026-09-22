@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # Phronesis Installer
 #
-# Usage: curl -fsSL https://raw.githubusercontent.com/luluthehungrycat/phronesis/main/install.sh | bash
+# Usage: curl -fsSL https://raw.githubusercontent.com/luluthehungrycat/phronesis/master/install.sh | bash
 #
-# Requires: Node.js >= 18, npm, and git (optional: opencode)
+# Requires: Node.js >= 18, npm, and git. OpenCode is required to execute
+# agent sessions, but the CLI can be installed before OpenCode is available.
 
 set -euo pipefail
 
@@ -46,7 +47,7 @@ ok "npm $(npm -v)"
 if command -v opencode &>/dev/null; then
   ok "opencode $(opencode --version 2>/dev/null || echo 'found')"
 else
-  warn "opencode not found. Install it from https://github.com/luluthehungrycat/opencode"
+  warn "OpenCode not found. Install it from https://github.com/anomalyco/opencode"
 fi
 
 # ---- Install Phronesis CLI ----

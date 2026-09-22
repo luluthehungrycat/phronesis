@@ -2,7 +2,9 @@
 
 **Practical wisdom from agent experience.**
 
-Phronesis is a CLI and plugin suite that wraps [OpenCode](https://github.com/opencode-ai/opencode) with adaptive learning capabilities inspired by [Hermes Agent](https://github.com/related-science/hermes). It turns raw agent interactions into compounding practical wisdom — auto-creating skills, searching past sessions, and routing conversations across Telegram, Slack, Discord, and more.
+Phronesis is a standalone CLI product built on [OpenCode](https://github.com/anomalyco/opencode), with plugins that add adaptive learning capabilities inspired by [Hermes Agent](https://github.com/NousResearch/hermes-agent). The product interface is `phronesis <subcommand> <arguments>`; Phronesis invokes OpenCode underneath rather than merely exposing a loose collection of plugins.
+
+Hermes is prior art and a behavioral reference, not a Phronesis runtime dependency. MCP/API interoperability with Hermes is a possible future roadmap item, not a current prerequisite or priority.
 
 ## Key Features
 
@@ -18,14 +20,14 @@ Phronesis is a CLI and plugin suite that wraps [OpenCode](https://github.com/ope
 ### Install via npm
 
 ```bash
-npm install -g @phronesis/cli
+npm install -g ./cli
 phronesis --help
 ```
 
 ### Install via install.sh
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/luluthehungrycat/phronesis/main/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/luluthehungrycat/phronesis/master/install.sh | bash
 phronesis --help
 ```
 
@@ -34,8 +36,10 @@ phronesis --help
 ```bash
 git clone https://github.com/luluthehungrycat/phronesis.git
 cd phronesis
+npm install --prefix cli
+npm install -g ./cli
 npm run setup
-./cli/bin/phronesis.js --help
+phronesis --help
 ```
 
 ## Documentation
@@ -44,24 +48,25 @@ npm run setup
 - [Architecture](03-architecture.md) — Plugin architecture and design decisions
 - [Plugin API Reference](05-plugin-api-reference.md) — OpenCode plugin hooks and patterns
 - [CLI Reference](13-cli-and-profiles.md) — CLI commands, profiles, and configuration
+- [Roadmap](02-roadmap.md) — Product direction, priorities, and non-goals
 - [Telegram Gateway Setup](06-telegram-gateway.md) — Running agents via Telegram
 - [Contributing](10-contributing.md) — Development guide and how to help
 
 ## Project Status
 
-Phronesis is actively developed. All core plugins are implemented and tested:
+Phronesis is actively developed. The core plugin packages are implemented and tested; activation remains dependent on explicit OpenCode registration:
 
 | Plugin | Phase | Tests | Status |
 |--------|-------|-------|--------|
-| Skill Creator | P1 | ✅ 78/78 | Active |
-| Session Search | P2 | ✅ 78/78 | Active |
-| Persona | P4 | ✅ 78/78 | Active |
-| Memory Consolidation | P5 | ⚠️ 70/78 | Active |
-| Remote Execution | P6 | ✅ 78/78 | Active |
-| Skill Lifecycle | P8 | ✅ 78/78 | Active |
-| User Profiling | P9 | ✅ 78/78 | Active |
+| Skill Creator | P1 | ✅ Tested | Implemented; register to activate |
+| Session Search | P2 | ✅ Tested | Implemented; register to activate |
+| Persona | P4 | ✅ Tested | Implemented; register to activate |
+| Memory Consolidation | P5 | ✅ Tested | Implemented; register to activate |
+| Remote Execution | P6 | ✅ Tested | Implemented; register to activate |
+| Skill Lifecycle | P8 | ✅ Tested | Implemented; register to activate |
+| User Profiling | P9 | ✅ Tested | Implemented; register to activate |
 
-Gateway integrations (Telegram, Slack, Discord, email) are all production-ready.
+Telegram is the documented gateway path and AgentMail is optional and unconfigured by default. Slack and Discord currently have outbound webhook send commands; broader interactive gateway support remains planned.
 
 ---
 

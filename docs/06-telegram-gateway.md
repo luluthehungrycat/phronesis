@@ -6,7 +6,7 @@ The Telegram gateway is powered by [`@grinev/opencode-telegram-bot`](https://git
 
 - **Stars**: 743 · **Contributors**: 20 · **Releases**: 45 · **Latest**: v0.21.0
 - **License**: MIT
-- **Installed version**: v0.20.1 (global npm, `~/.npm-global/bin/opencode-telegram`)
+- **Example version**: v0.20.1 (deployment must be installed and verified separately)
 
 ---
 
@@ -93,10 +93,10 @@ The bot provides full Telegram-native interaction with OpenCode:
 - Permission gating respects `opencode.json` rules
 - Session-level and tool-level permission prompts
 
-### Scheduling
-- `/schedule` — create recurring tasks via `opencode-scheduler`
-- `/tasks` — manage scheduled tasks
-- Results delivered to Telegram
+### Scheduling (when configured)
+- `/schedule` — create recurring tasks when an external scheduler is registered
+- `/tasks` — manage scheduled tasks when the gateway/scheduler integration is enabled
+- Result delivery depends on that configured integration; it is not provided by the checked-in Phronesis configuration
 
 ### Advanced
 - **Live tracking** — streaming updates during assistant responses
@@ -110,18 +110,15 @@ The bot provides full Telegram-native interaction with OpenCode:
 
 ## How It Connects to Phronesis Plugins
 
-The Telegram bot communicates with `opencode serve`, which loads all configured plugins. This means **all Phronesis plugins are automatically available through Telegram**:
+The Telegram bot communicates with `opencode serve`, which loads the plugins listed in the target OpenCode configuration. Source packages in this repository are not automatically active until they are registered in that configuration. The current repository `opencode.json` registers `opencode-injection-guard`; operators must add and verify any other Phronesis plugins before claiming they are available through Telegram.
 
 | Plugin | Available via Telegram |
 |--------|----------------------|
-| `skill-creator` | ✅ Agent can call `save-skill`, `list-skills`, `update-skill`, `skill-feedback` via Telegram |
-| `session-search` | ✅ Agent can call `search-sessions` via Telegram |
-| `supermemory` | ✅ Agent can access persistent memory via Telegram |
-| `opencode-scheduler` | ✅ `/schedule` and `/tasks` commands |
-| `opencode-pty` | ✅ Background process management |
-| `octto` | ✅ Brainstorming (via browser) |
+| `opencode-injection-guard` | ✅ Registered in the repository configuration |
+| Phronesis plugins | ⚠️ Available after explicit registration and runtime verification |
+| External plugins and gateways | ⚠️ Configuration-dependent |
 
-No additional integration needed — the bot delegates all LLM interactions to the OpenCode server, which runs the plugin pipeline.
+The bot delegates LLM interactions to the OpenCode server; plugin availability still follows the server's explicit configuration.
 
 ---
 
@@ -129,8 +126,8 @@ No additional integration needed — the bot delegates all LLM interactions to t
 
 | Platform | OpenCode Bot Available | Status for Phronesis |
 |----------|-----------------------|---------------------|
-| **Telegram** | ✅ `@grinev/opencode-telegram-bot` (v0.20.1) | **Active & running** |
-| **Email** | ⚠️ AgentMail MCP (`mcp.agentmail.to`) | **Config added** — needs AgentMail API key |
+| **Telegram** | ✅ `@grinev/opencode-telegram-bot` (v0.20.1) | **Documented path; verify deployment** |
+| **Email** | ⚠️ AgentMail MCP (`mcp.agentmail.to`) | **Optional and unconfigured** — requires explicit MCP configuration and credentials |
 | **Discord** | ❌ No mature bot | Future consideration |
 | **Slack** | ❌ No mature bot | Future consideration |
 | **WhatsApp** | ❌ No mature bot | Future consideration |
@@ -139,7 +136,7 @@ No additional integration needed — the bot delegates all LLM interactions to t
 
 ### Email via AgentMail
 
-AgentMail has been added as an MCP server in `opencode.json`:
+AgentMail is not configured in the checked-in `opencode.json`. Operators may add it as an MCP server when email support is needed:
 
 ```json
 "agentmail": {
@@ -163,9 +160,9 @@ To activate it, you need:
 1. **Telegram v0.21.0 upgrade** — Currently blocked by `better-sqlite3` native compilation failure in the global npm context. Needs root-free rebuild or containerized bot.
 2. **Multi-platform gateway** — Options under consideration:
    - **Build native MCP servers** — One per platform (high effort, full control)
-   - **Integrate Hermes gateway** — Hermes already has full Telegram/Discord/Slack/Signal/Email gateway. Bridge via MCP as passthrough.
-   - **Hybrid** — Hermes gateway as message router, OpenCode as brain
-3. **Email bridge** — AgentMail MCP already configured. Next step: define email-handling agent workflow.
+   - **Optional future interoperability** — evaluate a Hermes gateway bridge via MCP/API only after the native Phronesis path is reliable.
+   - **Hybrid** — if ever adopted, keep Hermes as an optional message router and OpenCode as the brain; Phronesis must remain independently usable.
+3. **Email bridge** — AgentMail MCP remains optional; configure and verify it before defining an email-handling workflow.
 
 ### Upgrade Path for Telegram Bot
 

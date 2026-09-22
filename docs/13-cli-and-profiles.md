@@ -3,19 +3,19 @@
 > **Date**: June 2026
 > **Status**: Phase 1a+1b+1c+2 complete. Active development.
 >
-> See `progress-report.md` for overall project status.
+> See [`09-progress-report.md`](09-progress-report.md) for overall project status.
 
 ---
 
 ## 1. Vision
 
-`phronesis` is a CLI and runtime that wraps OpenCode + Phronesis plugins into a self-contained experience inspired by Hermes Agent. 
+`phronesis` is the product CLI and wrapper that runs OpenCode with Phronesis plugins in a self-contained experience inspired by Hermes Agent. OpenCode is the prerequisite runtime; Hermes is inspiration and prior art, not a runtime dependency or required integration.
 
 **Core principles:**
 - Hermes users should feel at home (similar command structure, same profile concept)
 - Every phronesis command wraps or composes OpenCode — never replaces it
 - Profiles are first-class: each profile is a fully isolated OpenCode workspace with its own gateways, plugins, config, and data
-- Migration from Hermes Agent and OpenClaw is a key adoption driver
+- Migration from Hermes Agent and OpenClaw can be supported where useful, but native Phronesis/OpenCode operation comes first
 
 ---
 
@@ -72,7 +72,8 @@ phronesis send
 phronesis create-plugin <name>       → Scaffold a new Phronesis plugin
 
 phronesis dashboard [--port <N>]     → Launch web dashboard (sessions, config, gateway)
-phronesis plugin [search|info|list]  → Browse plugin registry
+phronesis plugin [search|info|list|install] → Browse or install plugins
+phronesis upgrade                    → Check for and install CLI upgrades
 phronesis setup                      → Interactive first-run wizard
 phronesis doctor                     → Diagnostics / system check
 phronesis version                    → Show version info
@@ -83,11 +84,6 @@ phronesis migrate
   claw [--dry-run]                   → Migrate from OpenClaw to Phronesis
   hermes [--dry-run]                 → Migrate from Hermes Agent to Phronesis
 
-# Hermes Naming Aliases (for familiarity)
-phronesis model                      → alias for `phronesis config get model`
-phronesis tools                      → alias for `phronesis config get plugins`
-phronesis cron list                  → opencode run /list-schedule
-phronesis cron status                → opencode run /check-scheduler
 ```
 
 ### 2.2 Hermes → Phronesis Mapping
@@ -107,12 +103,12 @@ phronesis cron status                → opencode run /check-scheduler
 | `hermes send` | `phronesis send telegram ...` | Only Telegram initially |
 | `hermes doctor` | `phronesis doctor` | Phronesis-specific diagnostics |
 | `hermes claw migrate [--dry-run]` | `phronesis migrate claw [--dry-run]` | Same flag |
-| `hermes dashboard` | `phronesis dashboard` | Launches web dashboard (Phase 3) |
+| `hermes dashboard` | `phronesis dashboard` | Launches the implemented dashboard command |
 | `hermes completion [bash\|zsh\|fish]` | `phronesis completion [bash\|zsh\|fish]` | Same behavior |
 | `hermes version` | `phronesis version` | Trivial |
-| `hermes model` | `phronesis config get model` | OC manages model config |
-| `hermes cron list\|status` | `phronesis cron list\|status` | Via opencode-scheduler |
-| `hermes tools` | `phronesis config get plugins` | Plugin list is config |
+| `hermes model` | `phronesis config get defaults.model` | Use the implemented config command |
+| `hermes cron list\|status` | — | No Phronesis cron command is implemented yet |
+| `hermes tools` | `phronesis plugin list` | Lists available registry entries; it does not verify installed or registered plugins |
 
 **Not implemented** (Hermes-specific, no analogue):
 - `hermes lsp`, `hermes computer-use` — platform-specific
@@ -165,7 +161,8 @@ defaults:
 # Global MCP configuration (shared across profiles)
 mcp:
   agentmail:
-    enabled: true
+    # Opt-in example; add credentials through the supported auth mechanism.
+    enabled: false
     url: "https://mcp.agentmail.to/mcp"
   context7:
     enabled: true
@@ -211,14 +208,14 @@ plugins:
   memory-consolidation:
     enabled: true
     config:
-      interval_minutes: 360
+      consolidation_interval_hours: 6
 ```
 
 ### 3.4 Switching Profiles
 
-Switching a profile means:
+Switching a profile means persisting the active profile selection; the command prints export commands for the caller to apply:
 
-1. **Set env vars** for the current session:
+1. **Set env vars** for the current session if profile data isolation is required:
    ```bash
    export OPENCODE_HOME=~/.config/phronesis/profiles/<name>
    export XDG_DATA_HOME=~/.config/phronesis/profiles/<name>/data
@@ -232,7 +229,7 @@ Switching a profile means:
 
 3. **Gateways** read env files from the profile's `gateways/` directory.
 
-The `phronesis profile use <name>` command updates `~/.config/phronesis/config.yaml` (active_profile) and sets env vars for the current shell.
+The `phronesis profile use <name>` command updates `~/.config/phronesis/config.yaml` (`active_profile`) and prints only the `OPENCODE_HOME` and `OPENCODE_TELEGRAM_HOME` exports. Because a child process cannot modify its caller's shell, set `XDG_DATA_HOME` separately when required, then source the printed exports or use a profile shorthand script for subsequent commands.
 
 ### 3.5 Profile Shorthand Scripts
 
@@ -247,7 +244,7 @@ exec phronesis "$@" --profile work
 This means:
 - `work chat "hello"` → `phronesis chat "hello" --profile work`
 - `work gateway status` → `phronesis gateway status --profile work`
-- `work config get model` → `phronesis config get model --profile work`
+- `work config get defaults.model` → `phronesis config get defaults.model --profile work`
 
 The scripts are created on `phronesis profile create <name>` and removed on `phronesis profile delete <name>`.
 
@@ -460,7 +457,7 @@ set -e
 
 The script should be published to a URL like:
 ```
-curl -fsSL https://raw.githubusercontent.com/luluthehungrycat/phronesis/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/luluthehungrycat/phronesis/master/install.sh | bash
 ```
 
 ---
@@ -469,11 +466,11 @@ curl -fsSL https://raw.githubusercontent.com/luluthehungrycat/phronesis/main/ins
 
 | Item | Status | Action Needed |
 |------|--------|---------------|
-| Telegram notifications | ✅ **Done** — all 7 plugins wired | None |
-| AgentMail MCP | ✅ **Done** — OAuth configured + env var set | None |
+| Telegram notifications | 🔶 Configuration-dependent | Register plugins in the target OpenCode configuration and verify the gateway path |
+| AgentMail MCP | 🔶 Optional | Configure the MCP server and credentials before use |
 | Dogfood | 🔶 Ongoing | Active via Bot 2 |
 | Polish | 🔶 Ongoing | Fix as encountered |
-| CLI scaffold | ✅ **Phase 1a+1b+1c+2+3 complete** | 17 commands: chat, continue, fork, version, config, profile, gateway (status/start/stop/restart/logs/install/uninstall), skills (list/install/update/feedback), sessions (list/search/rebuild), create-plugin, plugin (search/info/list), dashboard, completion, doctor, setup, send, migrate |
+| CLI scaffold | ✅ **Phase 1a+1b+1c+2+3 complete** | Core commands include chat, continue, fork, version, config, profile, gateway, skills, sessions, create-plugin, plugin (search/info/list/install), dashboard, completion, doctor, setup, send, and migrate |
 | Search index | ✅ **FTS5 rebuild** | 3907+ rows indexed from opencode.db |
 | Container HEALTHCHECK | ✅ **serve** | Curl-based health check added to Dockerfile |
 | Session-search plugin | ✅ **Refactored** | Fixed execSync→spawnSync, sqlEscape, snippet column index |

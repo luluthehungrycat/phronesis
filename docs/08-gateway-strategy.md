@@ -3,23 +3,23 @@
 ## Current Architecture
 
 ```
-Telegram ──→ opencode-telegram ─HTTP──→ opencode serve ──→ Phronesis plugins
+Telegram ──→ opencode-telegram ─HTTP──→ opencode serve ──→ configured plugins
                                             │
-AgentMail ─────MCP (remote) ───────────→ opencode serve
+AgentMail ─────MCP (optional) ─────────→ opencode serve
                                             │
 CLI ──────→ opencode (TUI) ─────────────→ opencode serve
 ```
 
 ## Platforms
 
-### ✅ Telegram (Production)
-**Status**: Running via `@grinev/opencode-telegram-bot` v0.20.1  
+### 🟡 Telegram (Documented Path)
+**Status**: Can run via `@grinev/opencode-telegram-bot` v0.20.1 when explicitly deployed
 **Connection**: HTTP to `opencode serve` on port 4096  
 **Features**: Sessions, models, permissions, files, voice, scheduling, skills, agents  
 **Multi-instance**: Yes — separate bot tokens, shared backend
 
-### ✅ AgentMail (Configured)
-**Status**: MCP server configured but needs API key to activate  
+### 🟡 AgentMail (Optional)
+**Status**: Can be configured as a remote MCP server; activation requires explicit configuration and credentials
 **Connection**: Remote MCP at `https://mcp.agentmail.to/mcp`  
 **Use case**: Email gateway — send emails from OpenCode, receive and process incoming  
 **Auth**: x-api-key header or OAuth
@@ -34,7 +34,7 @@ CLI ──────→ opencode (TUI) ─────────────
 ### 🟢 Next: Discord
 **Effort**: 2-3 days if using existing `discord.js` + `@grinev` patterns  
 **Approach**: Fork `opencode-telegram-bot` patterns → adapt for Discord  
-**Alternative**: Use Hermes gateway via MCP passthrough  
+**Possible later alternative**: Evaluate Hermes gateway interoperability via MCP/API after the native Phronesis gateway path is reliable. This is not a current dependency.
 **Key features needed**: Channels, threads, slash commands, file uploads
 
 ### 🟡 Medium: Email (Interactive)
@@ -91,7 +91,7 @@ Each platform adapter:
 
 ## Using Hermes Gateway as a Bridge
 
-An alternative to building each platform adapter from scratch is to use Hermes Agent's existing multi-platform gateway as an MCP server:
+An optional future alternative to building each platform adapter from scratch would be to use Hermes Agent's existing multi-platform gateway through an MCP/API boundary:
 
 ```
 Telegram ──→ Hermes Gateway ──MCP──→ opencode serve
@@ -101,11 +101,11 @@ WhatsApp ──→ Hermes Gateway ──MCP──→ opencode serve
 
 **Pros**: Instant multi-platform, Hermes maintains the platform adapters  
 **Cons**: Dependency on external project, potential API changes, added latency  
-**Viability**: High — Hermes gateway is open source and modular
+**Viability**: Undetermined — this must not be treated as a current architectural assumption or prerequisite.
 
 ## Phronesis Integration Points
 
-All gateways automatically benefit from Phronesis:
+Gateways can benefit from Phronesis when the relevant plugins are explicitly registered and verified in the OpenCode server:
 
 | Feature | How Gateway Users Experience It |
 |---------|--------------------------------|
@@ -113,11 +113,11 @@ All gateways automatically benefit from Phronesis:
 | **Session Search** | "Remember when..." prompts auto-trigger search |
 | **Persona** | Each gateway user gets consistent persona |
 | **Memory** | Facts added from any platform persist for all |
-| **Consolidation** | Background extraction runs regardless of entry point |
+| **Consolidation** | Tool-based/heartbeat detection is available when the memory plugin is enabled; scheduler automation remains planned |
 
 ## Recommended Path
 
-1. ✅ **Current**: Telegram (production) + AgentMail (configured)
-2. 🟢 **Next**: Complete Telegram multi-instance setup + activate AgentMail
+1. 🟡 **Current**: Telegram gateway path documented; AgentMail remains optional
+2. 🟢 **Next**: Verify the target OpenCode configuration, complete Telegram multi-instance setup, and activate AgentMail only if needed
 3. 🟡 **After**: Discord adapter (clone telegram-bot pattern)
-4. 🔴 **Later**: Evaluate Hermes gateway integration for remaining platforms
+4. 🔴 **Later**: Evaluate optional Hermes gateway interoperability for remaining platforms, without making Hermes required

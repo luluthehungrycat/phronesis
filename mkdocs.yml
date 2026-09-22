@@ -14,9 +14,13 @@ theme:
 nav:
   - Home: index.md
   - Getting Started: 04-first-steps.md
+  - Analysis: 01-analysis.md
   - Architecture: 03-architecture.md
   - Plugin API: 05-plugin-api-reference.md
   - CLI Reference: 13-cli-and-profiles.md
+  - Roadmap: 02-roadmap.md
+  - Notifications: 11-notification-system.md
+  - Capability Architecture: 12-p6-p8-p9-architecture.md
   - Gateways:
     - Telegram Setup: 06-telegram-gateway.md
     - Multi-Instance: 07-telegram-multi-instance.md

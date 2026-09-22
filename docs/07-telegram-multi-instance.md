@@ -4,17 +4,15 @@
 
 Phronesis uses [@grinev/opencode-telegram-bot](https://github.com/grinev/opencode-telegram-bot) (v0.20.1) as its Telegram gateway. This is a standalone CLI application that connects to OpenCode's HTTP API (`opencode serve`), not an OpenCode plugin — which provides better reliability isolation.
 
-You're running it right now — this very conversation is going through this gateway.
+This document describes an optional deployment pattern; verify the target gateway and OpenCode services before relying on it.
 
 ## Architecture
 
 ```
-Telegram User ←→ opencode-telegram ←HTTP→ opencode serve ←→ Phronesis plugins
+Telegram User ←→ opencode-telegram ←HTTP→ opencode serve ←→ configured plugins
                                             │
-                                            ├── opencode-skill-creator
-                                            ├── opencode-session-search
-                                            ├── opencode-persona
-                                            └── opencode-memory-consolidation
+                                            ├── injection-guard (current config)
+                                            └── Phronesis plugins (when registered)
 ```
 
 ## Multi-Instance Strategy
@@ -32,9 +30,9 @@ Different use cases benefit from separate bot instances:
 
 ### Shared Infrastructure
 
-All instances share:
+Instances may share:
 - Same `opencode serve` process (port 4096)
-- Same Phronesis plugins (skills, memory, persona)
+- The plugins explicitly registered in that server's OpenCode configuration
 - Same session database
 - Separate Telegram bot tokens (different bots in Telegram)
 
@@ -155,37 +153,37 @@ volumes:
 
 ## Integration with Phronesis Plugins
 
-All Telegram instances automatically benefit from Phronesis plugins loaded in `opencode serve`:
+Telegram instances can use Phronesis plugins loaded in `opencode serve`; availability is configuration-dependent. The checked-in repository configuration currently registers `opencode-injection-guard`, not all seven Phronesis packages:
 
-### Skill Creator
+### Skill Creator (when registered)
 - `save-skill` and `update-skill` available via Telegram
 - After complex conversations → agent suggests saving as skill
 - Users can trigger: "/tool save-skill name='...' description='...'"
 
-### Session Search
+### Session Search (when registered)
 - "Remember when we fixed the database issue?" → agent uses `/search-sessions`
 - Cross-session context injection via system prompt
 
-### Persona
+### Persona (when registered)
 - Each bot instance can have a different persona via `set-persona`
 - Persona persists across sessions
 - `/tool set-persona persona='{"name":"..."}'` from Telegram
 
-### Memory Consolidation
+### Memory Consolidation (when registered)
 - Facts stored via Telegram persist locally
 - `memory-stats` available via Telegram
-- Consolidation happens automatically in background
+- Consolidation can be invoked through the plugin tools; heartbeat-based overdue detection is available, while scheduler-driven background execution remains planned
 
-## Current Production Instance
+## Deployment Status
 
-Your current setup (already running):
+Use the following table to record a deployment after verifying the target services:
 
 | Component | Status | Details |
 |-----------|--------|---------|
-| `opencode serve` | ✅ Running | Port 4096, v1.15.10 |
-| `opencode-telegram` | ✅ Running | v0.20.1, foreground mode |
-| AgentMail MCP | ✅ Configured | Remote MCP server |
-| Phronesis plugins | ✅ Loaded | skill-creator, session-search, persona, memory-consolidation |
+| `opencode serve` | Configuration-dependent | Verify the target server and version |
+| `opencode-telegram` | Configuration-dependent | v0.20.1 is the documented gateway version |
+| AgentMail MCP | Optional | Requires explicit OpenCode MCP configuration and credentials |
+| Phronesis plugins | Configuration-dependent | Register each package and verify runtime loading |
 
 ## Upgrade Path
 
