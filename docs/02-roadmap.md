@@ -11,7 +11,7 @@ The roadmap therefore prioritizes a reliable native OpenCode path and a useful P
 ## Phase 🟢: Do First (Days)
 
 ### P1: `opencode-skill-creator` — Auto-Skill Creation
-**Status**: ⬜ Not started  
+**Status**: ✅ Implemented; hardening and approval workflow remain planned
 **Effort**: 2-3 days  
 **Depends on**: Nothing (pure plugin)
 
@@ -36,7 +36,7 @@ Session complete → Complexity check → LLM extracts pattern
 ```
 
 ### P2: `opencode-session-search` — FTS5 Session Search
-**Status**: ⬜ Not started  
+**Status**: ✅ Implemented; citations and richer filters remain planned
 **Effort**: 2-3 days  
 **Depends on**: Nothing
 
@@ -55,7 +55,7 @@ User query → FTS5 search on sessions.db → Rank results
 ```
 
 ### P3: Skill Improvement Pipeline
-**Status**: ⬜ Not started  
+**Status**: ✅ Implemented within skill-creator; broader quality metrics remain planned
 **Effort**: 3-4 days  
 **Depends on**: P1
 
@@ -71,7 +71,7 @@ User query → FTS5 search on sessions.db → Rank results
 ## Phase 🟡: Do Second (1-2 Weeks)
 
 ### P4: `opencode-persona` — Structured Persona System
-**Status**: ⬜ Not started  
+**Status**: ✅ Implemented
 **Effort**: 3-5 days  
 **Depends on**: Nothing
 
@@ -82,7 +82,7 @@ User query → FTS5 search on sessions.db → Rank results
 - Compatible with Hermes' SOUL.md format (bidirectional import/export)
 
 ### P5: `opencode-memory-consolidator` — Background Mind Dumps
-**Status**: ⬜ Not started  
+**Status**: ✅ Implemented; provenance, approval, and injection scanning remain planned
 **Effort**: ~1 week  
 **Depends on**: `opencode-scheduler`, `opencode-supermemory` or `opencode-mem`
 
@@ -95,7 +95,7 @@ User query → FTS5 search on sessions.db → Rank results
 - Reports: "Consolidated N new facts from M sessions"
 
 ### P6: Remote Execution Plugin
-**Status**: ⬜ Not started  
+**Status**: ✅ Implemented; policy enforcement and execution receipts remain planned
 **Effort**: 1-2 weeks  
 **Depends on**: Docker/SSH MCP servers or direct SDK integration
 
@@ -110,7 +110,7 @@ User query → FTS5 search on sessions.db → Rank results
 ## Phase 🔴: Do Third (1-3 Months)
 
 ### P7: Multi-Platform Gateway
-**Status**: ⬜ Not started  
+**Status**: 🟡 Partial; Telegram and AgentMail are integrated, broader native adapters remain planned
 **Effort**: 1-2 months  
 **Depends on**: All of Phase 🟢 + 🟡
 
@@ -120,7 +120,7 @@ User query → FTS5 search on sessions.db → Rank results
 3. **Hybrid** — consider an optional external message router while keeping Phronesis independently usable.
 
 ### P8: Full Skill Lifecycle Management
-**Status**: ⬜ Not started  
+**Status**: ✅ Implemented; deeper health metrics and maintenance automation remain planned
 **Effort**: 1-2 months  
 **Depends on**: P1, P3
 
@@ -132,7 +132,7 @@ Extends auto-skill creation with:
 - **Skill deprecation** — retire skills that are never used or consistently wrong
 
 ### P9: User Profiling System
-**Status**: ⬜ Not started  
+**Status**: ✅ Implemented; conflict detection and richer import/export remain planned
 **Effort**: 2-4 weeks  
 **Depends on**: P2, P5
 
