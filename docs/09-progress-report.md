@@ -260,7 +260,7 @@ Data:
 ### Long Term
 - Full skill lifecycle: auto-verification, metrics, deprecation
 - Honcho integration for user profiling
-- Hermes gateway bridge for expanded platform support
+- Optional future Hermes MCP/API interoperability for expanded platform support, evaluated only after the native Phronesis/OpenCode gateway path is reliable
 
 ---
 

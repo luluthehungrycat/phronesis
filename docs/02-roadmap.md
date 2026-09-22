@@ -84,7 +84,7 @@ User query → FTS5 search on sessions.db → Rank results
 ### P5: `opencode-memory-consolidator` — Background Mind Dumps
 **Status**: ✅ Implemented; provenance, approval, and injection scanning remain planned
 **Effort**: ~1 week  
-**Depends on**: `opencode-scheduler`, `opencode-supermemory` or `opencode-mem`
+**Depends on**: local SQLite/FTS5 storage; optional Supermemory integration. Scheduler-driven maintenance remains planned.
 
 **What it does**:
 - Cron-triggered background task (e.g., every 6 hours)

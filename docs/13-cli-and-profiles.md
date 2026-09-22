@@ -3,7 +3,7 @@
 > **Date**: June 2026
 > **Status**: Phase 1a+1b+1c+2 complete. Active development.
 >
-> See `progress-report.md` for overall project status.
+> See [`09-progress-report.md`](09-progress-report.md) for overall project status.
 
 ---
 
@@ -83,11 +83,6 @@ phronesis migrate
   claw [--dry-run]                   → Migrate from OpenClaw to Phronesis
   hermes [--dry-run]                 → Migrate from Hermes Agent to Phronesis
 
-# Hermes Naming Aliases (for familiarity)
-phronesis model                      → alias for `phronesis config get model`
-phronesis tools                      → alias for `phronesis config get plugins`
-phronesis cron list                  → opencode run /list-schedule
-phronesis cron status                → opencode run /check-scheduler
 ```
 
 ### 2.2 Hermes → Phronesis Mapping
@@ -110,9 +105,9 @@ phronesis cron status                → opencode run /check-scheduler
 | `hermes dashboard` | `phronesis dashboard` | Launches web dashboard (Phase 3) |
 | `hermes completion [bash\|zsh\|fish]` | `phronesis completion [bash\|zsh\|fish]` | Same behavior |
 | `hermes version` | `phronesis version` | Trivial |
-| `hermes model` | `phronesis config get model` | OC manages model config |
-| `hermes cron list\|status` | `phronesis cron list\|status` | Via opencode-scheduler |
-| `hermes tools` | `phronesis config get plugins` | Plugin list is config |
+| `hermes model` | `phronesis config get defaults.model` | Use the implemented config command |
+| `hermes cron list\|status` | — | No Phronesis cron command is implemented yet |
+| `hermes tools` | `phronesis plugin list` | Lists the installed Phronesis plugins |
 
 **Not implemented** (Hermes-specific, no analogue):
 - `hermes lsp`, `hermes computer-use` — platform-specific
