@@ -3,17 +3,17 @@
 ## Current Architecture
 
 ```
-Telegram ──→ opencode-telegram ─HTTP──→ opencode serve ──→ Phronesis plugins
+Telegram ──→ opencode-telegram ─HTTP──→ opencode serve ──→ configured plugins
                                             │
-AgentMail ─────MCP (remote) ───────────→ opencode serve
+AgentMail ─────MCP (optional) ─────────→ opencode serve
                                             │
 CLI ──────→ opencode (TUI) ─────────────→ opencode serve
 ```
 
 ## Platforms
 
-### ✅ Telegram (Production)
-**Status**: Running via `@grinev/opencode-telegram-bot` v0.20.1  
+### 🟡 Telegram (Documented Path)
+**Status**: Can run via `@grinev/opencode-telegram-bot` v0.20.1 when explicitly deployed
 **Connection**: HTTP to `opencode serve` on port 4096  
 **Features**: Sessions, models, permissions, files, voice, scheduling, skills, agents  
 **Multi-instance**: Yes — separate bot tokens, shared backend

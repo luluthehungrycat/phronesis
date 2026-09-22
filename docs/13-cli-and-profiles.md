@@ -456,7 +456,7 @@ set -e
 
 The script should be published to a URL like:
 ```
-curl -fsSL https://raw.githubusercontent.com/luluthehungrycat/phronesis/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/luluthehungrycat/phronesis/master/install.sh | bash
 ```
 
 ---

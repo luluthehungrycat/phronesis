@@ -126,8 +126,8 @@ The bot delegates LLM interactions to the OpenCode server; plugin availability s
 
 | Platform | OpenCode Bot Available | Status for Phronesis |
 |----------|-----------------------|---------------------|
-| **Telegram** | ✅ `@grinev/opencode-telegram-bot` (v0.20.1) | **Active & running** |
-| **Email** | ⚠️ AgentMail MCP (`mcp.agentmail.to`) | **Config added** — needs AgentMail API key |
+| **Telegram** | ✅ `@grinev/opencode-telegram-bot` (v0.20.1) | **Documented path; verify deployment** |
+| **Email** | ⚠️ AgentMail MCP (`mcp.agentmail.to`) | **Optional and unconfigured** — requires explicit MCP configuration and credentials |
 | **Discord** | ❌ No mature bot | Future consideration |
 | **Slack** | ❌ No mature bot | Future consideration |
 | **WhatsApp** | ❌ No mature bot | Future consideration |

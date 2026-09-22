@@ -174,9 +174,9 @@ Telegram instances can use Phronesis plugins loaded in `opencode serve`; availab
 - `memory-stats` available via Telegram
 - Consolidation can be invoked through the plugin tools; heartbeat-based overdue detection is available, while scheduler-driven background execution remains planned
 
-## Current Production Instance
+## Deployment Status
 
-Your current setup (already running):
+Use the following table to record a deployment after verifying the target services:
 
 | Component | Status | Details |
 |-----------|--------|---------|

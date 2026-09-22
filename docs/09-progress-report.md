@@ -2,7 +2,7 @@
 
 > **Date**: June 2026
 > **Commits**: 12
-> **Tests**: 78/78 passing
+> **Tests**: plugin and CLI suites verified in CI
 > **Plugins**: 7 packages implemented/tested; explicit registration required
 > **Gateway**: Telegram path documented; AgentMail optional and unconfigured by default
 
@@ -143,8 +143,8 @@ Builds longitudinal user models from session interactions. Tracks communication 
 
 | Platform | Component | Status | Details |
 |----------|-----------|--------|---------|
-| **Telegram** | Bot 1 | ✅ Running | `opencode-telegram.service` — v0.20.1, port 4096 |
-| **Telegram** | Bot 2 | ✅ Running | `opencode-telegram-2.service` — v0.20.1, port 4097 |
+| **Telegram** | Bot 1 | Configuration-dependent | `opencode-telegram.service` — v0.20.1, port 4096 |
+| **Telegram** | Bot 2 | Configuration-dependent | `opencode-telegram-2.service` — v0.20.1, port 4097 |
 | **Email** | AgentMail MCP | Optional | `mcp.agentmail.to` remote MCP; requires explicit configuration and credentials |
 | **CLI** | Native | ✅ Always available | Direct terminal |
 

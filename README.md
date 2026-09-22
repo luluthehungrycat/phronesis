@@ -60,7 +60,7 @@ servers/
 tests/
 └── container/                   Podman/Docker test container
     ├── Dockerfile               Multi-stage build
-    ├── test.mjs                 78-test suite (70/78 pass in Alpine, 8 need musl-native better-sqlite3)
+    ├── test.mjs                 Container and plugin test runner
     └── entrypoint.sh            Test runner with serve mode support
 ```
 

@@ -11,7 +11,7 @@ npm install -g phronesis
 Or via the install script:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/luluthehungrycat/phronesis/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/luluthehungrycat/phronesis/master/install.sh | bash
 ```
 
 ## Quick Start

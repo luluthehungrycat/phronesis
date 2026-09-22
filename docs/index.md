@@ -54,17 +54,17 @@ phronesis --help
 
 ## Project Status
 
-Phronesis is actively developed. All core plugins are implemented and tested:
+Phronesis is actively developed. The core plugin packages are implemented and tested; activation remains dependent on explicit OpenCode registration:
 
 | Plugin | Phase | Tests | Status |
 |--------|-------|-------|--------|
-| Skill Creator | P1 | ✅ 78/78 | Active |
-| Session Search | P2 | ✅ 78/78 | Active |
-| Persona | P4 | ✅ 78/78 | Active |
-| Memory Consolidation | P5 | ⚠️ 70/78 | Active |
-| Remote Execution | P6 | ✅ 78/78 | Active |
-| Skill Lifecycle | P8 | ✅ 78/78 | Active |
-| User Profiling | P9 | ✅ 78/78 | Active |
+| Skill Creator | P1 | ✅ Tested | Implemented; register to activate |
+| Session Search | P2 | ✅ Tested | Implemented; register to activate |
+| Persona | P4 | ✅ Tested | Implemented; register to activate |
+| Memory Consolidation | P5 | ✅ Tested | Implemented; register to activate |
+| Remote Execution | P6 | ✅ Tested | Implemented; register to activate |
+| Skill Lifecycle | P8 | ✅ Tested | Implemented; register to activate |
+| User Profiling | P9 | ✅ Tested | Implemented; register to activate |
 
 Telegram is the documented gateway path and AgentMail is optional and unconfigured by default. Slack and Discord currently have outbound webhook send commands; broader interactive gateway support remains planned.
 

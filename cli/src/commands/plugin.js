@@ -8,7 +8,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = join(__dirname, "..", "..", "..");
 
 const REGISTRY_URL =
-  "https://raw.githubusercontent.com/luluthehungrycat/phronesis/main/plugins/registry.json";
+  "https://raw.githubusercontent.com/luluthehungrycat/phronesis/master/plugins/registry.json";
 
 /**
  * Load the plugin registry from a local file or remote URL.
