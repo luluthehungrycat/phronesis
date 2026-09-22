@@ -163,8 +163,8 @@ To activate it, you need:
 1. **Telegram v0.21.0 upgrade** — Currently blocked by `better-sqlite3` native compilation failure in the global npm context. Needs root-free rebuild or containerized bot.
 2. **Multi-platform gateway** — Options under consideration:
    - **Build native MCP servers** — One per platform (high effort, full control)
-   - **Integrate Hermes gateway** — Hermes already has full Telegram/Discord/Slack/Signal/Email gateway. Bridge via MCP as passthrough.
-   - **Hybrid** — Hermes gateway as message router, OpenCode as brain
+   - **Optional future interoperability** — evaluate a Hermes gateway bridge via MCP/API only after the native Phronesis path is reliable.
+   - **Hybrid** — if ever adopted, keep Hermes as an optional message router and OpenCode as the brain; Phronesis must remain independently usable.
 3. **Email bridge** — AgentMail MCP already configured. Next step: define email-handling agent workflow.
 
 ### Upgrade Path for Telegram Bot

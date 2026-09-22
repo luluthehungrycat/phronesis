@@ -34,7 +34,7 @@ CLI ──────→ opencode (TUI) ─────────────
 ### 🟢 Next: Discord
 **Effort**: 2-3 days if using existing `discord.js` + `@grinev` patterns  
 **Approach**: Fork `opencode-telegram-bot` patterns → adapt for Discord  
-**Alternative**: Use Hermes gateway via MCP passthrough  
+**Possible later alternative**: Evaluate Hermes gateway interoperability via MCP/API after the native Phronesis gateway path is reliable. This is not a current dependency.
 **Key features needed**: Channels, threads, slash commands, file uploads
 
 ### 🟡 Medium: Email (Interactive)
@@ -91,7 +91,7 @@ Each platform adapter:
 
 ## Using Hermes Gateway as a Bridge
 
-An alternative to building each platform adapter from scratch is to use Hermes Agent's existing multi-platform gateway as an MCP server:
+An optional future alternative to building each platform adapter from scratch would be to use Hermes Agent's existing multi-platform gateway through an MCP/API boundary:
 
 ```
 Telegram ──→ Hermes Gateway ──MCP──→ opencode serve
@@ -101,7 +101,7 @@ WhatsApp ──→ Hermes Gateway ──MCP──→ opencode serve
 
 **Pros**: Instant multi-platform, Hermes maintains the platform adapters  
 **Cons**: Dependency on external project, potential API changes, added latency  
-**Viability**: High — Hermes gateway is open source and modular
+**Viability**: Undetermined — this must not be treated as a current architectural assumption or prerequisite.
 
 ## Phronesis Integration Points
 
@@ -120,4 +120,4 @@ All gateways automatically benefit from Phronesis:
 1. ✅ **Current**: Telegram (production) + AgentMail (configured)
 2. 🟢 **Next**: Complete Telegram multi-instance setup + activate AgentMail
 3. 🟡 **After**: Discord adapter (clone telegram-bot pattern)
-4. 🔴 **Later**: Evaluate Hermes gateway integration for remaining platforms
+4. 🔴 **Later**: Evaluate optional Hermes gateway interoperability for remaining platforms, without making Hermes required

@@ -1,5 +1,13 @@
 # Strategic Roadmap
 
+> The product-level direction is also recorded in the repository-root `ROADMAP.md`. This document tracks capability phases and implementation status.
+
+## Product Direction
+
+Phronesis is a standalone product built on OpenCode and inspired by Hermes Agent. OpenCode is the prerequisite runtime; Phronesis supplies the plugins and the `phronesis <subcommand> <arguments>` CLI wrapper that exposes implemented behavior. Hermes is prior art, not a runtime dependency. MCP/API interoperability with Hermes is optional future work and is not a current priority.
+
+The roadmap therefore prioritizes a reliable native OpenCode path and a useful Phronesis CLI before any Hermes bridge work.
+
 ## Phase 🟢: Do First (Days)
 
 ### P1: `opencode-skill-creator` — Auto-Skill Creation
@@ -108,8 +116,8 @@ User query → FTS5 search on sessions.db → Rank results
 
 **Options**:
 1. **Build native** — one MCP server per platform (Telegram, Discord, Slack)
-2. **Integrate Hermes gateway** — Hermes already has full gateway. Bridge it via MCP as a passthrough.
-3. **Hybrid** — Use Hermes gateway as message router, OpenCode as brain.
+2. **Evaluate Hermes interoperability later** — only after the native Phronesis/OpenCode path is reliable; use MCP/API only if it provides clear value without creating a required coupling.
+3. **Hybrid** — consider an optional external message router while keeping Phronesis independently usable.
 
 ### P8: Full Skill Lifecycle Management
 **Status**: ⬜ Not started  

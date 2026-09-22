@@ -9,13 +9,13 @@
 
 ## 1. Vision
 
-`phronesis` is a CLI and runtime that wraps OpenCode + Phronesis plugins into a self-contained experience inspired by Hermes Agent. 
+`phronesis` is the product CLI and wrapper that runs OpenCode with Phronesis plugins in a self-contained experience inspired by Hermes Agent. OpenCode is the prerequisite runtime; Hermes is inspiration and prior art, not a runtime dependency or required integration.
 
 **Core principles:**
 - Hermes users should feel at home (similar command structure, same profile concept)
 - Every phronesis command wraps or composes OpenCode — never replaces it
 - Profiles are first-class: each profile is a fully isolated OpenCode workspace with its own gateways, plugins, config, and data
-- Migration from Hermes Agent and OpenClaw is a key adoption driver
+- Migration from Hermes Agent and OpenClaw can be supported where useful, but native Phronesis/OpenCode operation comes first
 
 ---
 

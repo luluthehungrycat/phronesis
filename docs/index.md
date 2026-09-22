@@ -2,7 +2,9 @@
 
 **Practical wisdom from agent experience.**
 
-Phronesis is a CLI and plugin suite that wraps [OpenCode](https://github.com/opencode-ai/opencode) with adaptive learning capabilities inspired by [Hermes Agent](https://github.com/related-science/hermes). It turns raw agent interactions into compounding practical wisdom — auto-creating skills, searching past sessions, and routing conversations across Telegram, Slack, Discord, and more.
+Phronesis is a standalone CLI product built on [OpenCode](https://github.com/opencode-ai/opencode), with plugins that add adaptive learning capabilities inspired by [Hermes Agent](https://github.com/NousResearch/hermes-agent). The product interface is `phronesis <subcommand> <arguments>`; Phronesis invokes OpenCode underneath rather than merely exposing a loose collection of plugins.
+
+Hermes is prior art and a behavioral reference, not a Phronesis runtime dependency. MCP/API interoperability with Hermes is a possible future roadmap item, not a current prerequisite or priority.
 
 ## Key Features
 
@@ -44,6 +46,7 @@ npm run setup
 - [Architecture](03-architecture.md) — Plugin architecture and design decisions
 - [Plugin API Reference](05-plugin-api-reference.md) — OpenCode plugin hooks and patterns
 - [CLI Reference](13-cli-and-profiles.md) — CLI commands, profiles, and configuration
+- [Roadmap](02-roadmap.md) — Product direction, priorities, and non-goals
 - [Telegram Gateway Setup](06-telegram-gateway.md) — Running agents via Telegram
 - [Contributing](10-contributing.md) — Development guide and how to help
 

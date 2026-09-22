@@ -1,5 +1,21 @@
 # Technical Architecture
 
+## Product Layers
+
+Phronesis has three distinct layers:
+
+```
+┌──────────────────────────────────────────────┐
+│ Phronesis CLI (`phronesis <command> <args>`) │  Product interface
+├──────────────────────────────────────────────┤
+│ Phronesis plugins, profiles, services, data  │  Product capabilities
+├──────────────────────────────────────────────┤
+│ OpenCode                                    │  Required runtime
+└──────────────────────────────────────────────┘
+```
+
+The CLI wrapper owns Phronesis command semantics and configuration, then invokes or composes OpenCode for agent execution. Plugins extend OpenCode, but the product is not defined as a plugin bundle alone. Hermes Agent informs capability and UX choices; it is not a required integration boundary.
+
 ## Plugin Architecture Pattern
 
 All Phronesis plugins follow a consistent pattern leveraging OpenCode's existing infrastructure:
@@ -227,9 +243,10 @@ OpenCode Session DB (~/.local/share/opencode/)
 | session lifecycle |    | ✅ |    |    | ✅ |
 
 ### MCP Integration
-- Phronesis plugins use MCP servers for external services (Supermemory API, vector DBs)
-- No MCP server needs to be built for the first 3 plugins — they operate on local files + SQLite
-- The gateway (P7) would use MCP servers for each platform bridge
+- Phronesis plugins may use MCP servers for external services (Supermemory API, vector DBs).
+- No Hermes MCP/API connection is required for core Phronesis behavior.
+- No MCP server needs to be built for the first 3 plugins — they operate on local files + SQLite.
+- A Hermes interoperability bridge is optional future work, not a foundation for the architecture.
 
 ## Tech Stack Decisions
 

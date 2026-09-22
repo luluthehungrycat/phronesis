@@ -2,7 +2,9 @@
 
 **Practical wisdom from agent experience.**  
 
-Phronesis bridges the gap between OpenCode's powerful plugin ecosystem and Hermes Agent's adaptive learning capabilities. It brings auto-skill creation, session memory, self-improving skills, and intelligent experience reuse to OpenCode — turning raw agent interactions into compounding practical wisdom.
+Phronesis is a standalone product built on OpenCode. It supplies the plugins and product-level CLI wrapper needed to make OpenCode behave more like the Hermes-inspired experience we want to provide: `phronesis <subcommand> <arguments>` runs the implemented functionality through OpenCode.
+
+Hermes Agent is an inspiration and behavioral reference, not a runtime dependency or service boundary. Interoperability with Hermes through MCP or an API may be considered later, but it is not a current priority.
 
 ## Why
 
@@ -86,6 +88,13 @@ tests/
 | Discord | Send CLI | ✅ `phronesis send discord` | Discord webhook with "Phronesis" username |
 | Email | AgentMail MCP | ✅ Configured | Remote MCP at `mcp.agentmail.to` (needs API key) |
 | CLI | Native | ✅ Always available | Direct terminal + `phronesis` wrapper |
+
+## Product Boundary
+
+- **OpenCode is the prerequisite runtime.** Phronesis runs OpenCode rather than replacing it.
+- **Phronesis is more than a plugin collection.** Plugins provide capabilities inside OpenCode; the CLI, profiles, configuration, services, and documentation form the standalone product.
+- **The CLI is the primary product interface.** Implemented Hermes-inspired operations are exposed as `phronesis` commands, with OpenCode doing the underlying agent work.
+- **Hermes is prior art, not a dependency.** We reproduce selected functionality and interaction patterns without making Hermes installation, APIs, or MCP connectivity prerequisites.
 
 ## Core Philosophy
 

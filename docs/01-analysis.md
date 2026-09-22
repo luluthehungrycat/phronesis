@@ -142,7 +142,7 @@ All from a single gateway process sharing memory, skills, and tools.
 
 | Gap | Effort | Notes |
 |-----|--------|-------|
-| **Multi-platform gateway** (Telegram, Discord, Slack, WhatsApp, Signal, Email) | 1-2 months for initial 3 platforms | Each platform is a full integration. Could integrate Hermes gateway via MCP instead. |
+| **Multi-platform gateway** (Telegram, Discord, Slack, WhatsApp, Signal, Email) | 1-2 months for initial 3 platforms | Each platform is a full integration. A Hermes MCP/API bridge may be evaluated later, but is not a current dependency or priority. |
 | **Full self-improving skill lifecycle** (versioning, testing, auto-patching, metrics) | 2-3 weeks prototype, 1-2 months production | Builds on auto-skill creation |
 | **Honcho-style user profiling** (longitudinal user models) | 2-4 weeks basic, months production | Requires session search foundation first |
 
