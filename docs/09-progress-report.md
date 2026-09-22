@@ -195,7 +195,9 @@ Test infrastructure: Podman/Docker container with multi-stage build, OpenCode bi
 
 ---
 
-## 4. Deployment Architecture
+## 4. Example Deployment Architecture
+
+The following is an optional historical/example layout, not a claim about the checked-in runtime deployment. Services, ports, plugin registration, and data paths must be verified for each operator environment.
 
 ```
 Systemd Units:

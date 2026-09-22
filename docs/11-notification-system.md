@@ -47,19 +47,12 @@ All notifications go through `src/shared/telegram.js` which provides:
 
 Priority 2 is the **recommended default** — if `OPENCODE_TELEGRAM_HOME` points to a working gateway environment, notifications can reuse those credentials.
 
-### Plugin Config Example
+### Environment Configuration Example
 
-```json
-{
-  "plugin": {
-    "file:///home/user/phronesis/src/memory-consolidation": {
-      "config": {
-        "botToken": "[TELEGRAM_BOT_TOKEN]",
-        "chatId": "[TELEGRAM_CHAT_ID]"
-      }
-    }
-  }
-}
+```dotenv
+# Store this in OPENCODE_TELEGRAM_HOME/.env or another supported .env path.
+TELEGRAM_BOT_TOKEN=[TELEGRAM_BOT_TOKEN]
+TELEGRAM_ALLOWED_USER_ID=[TELEGRAM_CHAT_ID]
 ```
 
 ---
