@@ -64,7 +64,7 @@ Phronesis is actively developed. All core plugins are implemented and tested:
 | Skill Lifecycle | P8 | ✅ 78/78 | Active |
 | User Profiling | P9 | ✅ 78/78 | Active |
 
-Gateway integrations (Telegram, Slack, Discord, email) are all production-ready.
+Telegram is the active gateway integration and AgentMail is configured as an optional email MCP integration. Slack and Discord currently have outbound webhook send commands; broader interactive gateway support remains planned.
 
 ---
 

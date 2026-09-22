@@ -255,5 +255,5 @@ OpenCode Session DB (~/.local/share/opencode/)
 | Plugin runtime | OpenCode native (JS/TS) | Full access to hooks, context, tools |
 | Skill storage | `.opencode/skills/` filesystem | Works with existing discovery mechanism |
 | Session DB | SQLite + FTS5 | Already present, zero external deps |
-| Memory backend | supermemory API (existing) then `opencode-mem` local | Progressive: API first, local later |
+| Memory backend | Local SQLite + FTS5, with optional Supermemory push | Local-first persistence; external synchronization is opt-in |
 | LLM distillation | OpenCode agent's own model | No extra dependency, context-aware |
