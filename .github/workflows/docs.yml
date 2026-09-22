@@ -12,7 +12,23 @@ on:
       - 'mkdocs.yml'
 
 jobs:
+  validate:
+    name: Validate docs
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - run: pip install mkdocs-material
+      - run: mkdocs build --strict
+
   deploy:
+    name: Deploy docs
+    if: github.event_name == 'push'
+    needs: validate
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -28,12 +44,9 @@ jobs:
           python-version: '3.x'
       - run: pip install mkdocs-material
       - run: mkdocs build --strict
-      - if: github.event_name == 'push'
-        uses: actions/configure-pages@v4
+      - uses: actions/configure-pages@v4
       - uses: actions/upload-pages-artifact@v3
-        if: github.event_name == 'push'
         with:
           path: site
       - id: deployment
-        if: github.event_name == 'push'
         uses: actions/deploy-pages@v4
