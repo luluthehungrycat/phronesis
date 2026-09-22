@@ -73,6 +73,7 @@ phronesis create-plugin <name>       → Scaffold a new Phronesis plugin
 
 phronesis dashboard [--port <N>]     → Launch web dashboard (sessions, config, gateway)
 phronesis plugin [search|info|list|install] → Browse or install plugins
+phronesis upgrade                    → Check for and install CLI upgrades
 phronesis setup                      → Interactive first-run wizard
 phronesis doctor                     → Diagnostics / system check
 phronesis version                    → Show version info
@@ -214,7 +215,7 @@ plugins:
 
 Switching a profile means persisting the active profile selection; the command prints export commands for the caller to apply:
 
-1. **Set env vars** for the current session:
+1. **Set env vars** for the current session if profile data isolation is required:
    ```bash
    export OPENCODE_HOME=~/.config/phronesis/profiles/<name>
    export XDG_DATA_HOME=~/.config/phronesis/profiles/<name>/data
@@ -228,7 +229,7 @@ Switching a profile means persisting the active profile selection; the command p
 
 3. **Gateways** read env files from the profile's `gateways/` directory.
 
-The `phronesis profile use <name>` command updates `~/.config/phronesis/config.yaml` (`active_profile`) and prints the environment exports. Because a child process cannot modify its caller's shell, source the printed exports or use a profile shorthand script for subsequent commands.
+The `phronesis profile use <name>` command updates `~/.config/phronesis/config.yaml` (`active_profile`) and prints only the `OPENCODE_HOME` and `OPENCODE_TELEGRAM_HOME` exports. Because a child process cannot modify its caller's shell, set `XDG_DATA_HOME` separately when required, then source the printed exports or use a profile shorthand script for subsequent commands.
 
 ### 3.5 Profile Shorthand Scripts
 

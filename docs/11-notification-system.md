@@ -27,9 +27,9 @@ Phronesis plugins can send Telegram notifications for key events — skill creat
 ```
 
 All notifications go through `src/shared/telegram.js` which provides:
-- `getTelegramConfig(pluginConfig)` — resolves credentials from 3 sources
+- `getTelegramConfig(pluginConfig)` — resolves credentials from five sources
 - `sendTelegramNotification(text, config, opts)` — sends via Bot API
-- `notifySkillEvent(event, name, detail, config)` / `notifyMemoryEvent(subject, detail, config)` — convenience wrappers (available but not yet used by any plugin)
+- `notifySkillEvent(event, name, detail, config)` / `notifyMemoryEvent(subject, detail, config)` — convenience wrappers for future integrations; current plugins call the lower-level send helper directly
 
 ---
 
@@ -39,11 +39,13 @@ All notifications go through `src/shared/telegram.js` which provides:
 
 | Priority | Source | How to Set |
 |----------|--------|------------|
-| 1 | Plugin config in `opencode.json` | `"plugins": { "config": { "botToken": "...", "chatId": "..." } }` |
-| 2 | `~/.config/opencode-telegram-bot/.env` | `TELEGRAM_BOT_TOKEN=...` + `TELEGRAM_ALLOWED_USER_ID=...` |
-| 3 | Environment variables | `export TELEGRAM_BOT_TOKEN=...` + `TELEGRAM_ALLOWED_USER_ID=...` |
+| 1 | Plugin config in `opencode.json` | `"plugin": { "config": { "botToken": "...", "chatId": "..." } }` |
+| 2 | `OPENCODE_TELEGRAM_HOME/.env` | `TELEGRAM_BOT_TOKEN=...` + `TELEGRAM_ALLOWED_USER_ID=...` |
+| 3 | `~/.config/phronesis/config.yaml` | `telegram.bot_token` + `telegram.chat_id` |
+| 4 | `~/.config/opencode-telegram-bot/.env` | Legacy `TELEGRAM_BOT_TOKEN` + `TELEGRAM_ALLOWED_USER_ID` |
+| 5 | Environment variables | `export TELEGRAM_BOT_TOKEN=...` + `export TELEGRAM_ALLOWED_USER_ID=...` |
 
-Priority 2 is the **recommended default** — if you already have a working Telegram bot via `@grinev/opencode-telegram-bot`, notifications work automatically with zero additional config.
+Priority 2 is the **recommended default** — if `OPENCODE_TELEGRAM_HOME` points to a working gateway environment, notifications can reuse those credentials.
 
 ### Plugin Config Example
 

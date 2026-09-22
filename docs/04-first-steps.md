@@ -113,5 +113,5 @@ For local development, symlink or point OpenCode config at the local plugin path
 
 - OpenCode plugin hooks: examine `node_modules/opencode/` types or plugin examples
 - Existing plugins in this workspace: `~/.config/opencode/plugins/`
-- Hermes Agent source (for reference): `github.com/HermesAgent/hermes` (patterns to emulate, not copy)
+- Hermes Agent source (for reference): `https://github.com/NousResearch/hermes-agent` (patterns to emulate, not copy)
 - FTS5 documentation: SQLite FTS5 extension docs
