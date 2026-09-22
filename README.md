@@ -68,13 +68,13 @@ tests/
 
 | Plugin | Phase | Tests | Status |
 |--------|-------|-------|--------|
-| `skill-creator` | 🟢 P1 | ✅ 78/78 | Active |
-| `session-search` | 🟢 P2 | ✅ 78/78 | Active |
-| `persona` | 🟡 P4 | ✅ 78/78 | Active |
-| `memory-consolidation` | 🟡 P5 | ⚠️ 70/78 | Active (8 fail on musl — better-sqlite3 needs native rebuild) |
-| `remote-execution` | 🟡 P6 | ✅ 78/78 | Active |
-| `skill-lifecycle` | 🟡 P8 | ✅ 78/78 | Active |
-| `user-profiling` | 🟡 P9 | ✅ 78/78 | Active |
+| `skill-creator` | 🟢 P1 | ✅ Tested | Implemented; enable via OpenCode config |
+| `session-search` | 🟢 P2 | ✅ Tested | Implemented; enable via OpenCode config |
+| `persona` | 🟡 P4 | ✅ Tested | Implemented; enable via OpenCode config |
+| `memory-consolidation` | 🟡 P5 | ✅ Tested | Implemented; enable via OpenCode config |
+| `remote-execution` | 🟡 P6 | ✅ Tested | Implemented; enable via OpenCode config |
+| `skill-lifecycle` | 🟡 P8 | ✅ Tested | Implemented; enable via OpenCode config |
+| `user-profiling` | 🟡 P9 | ✅ Tested | Implemented; enable via OpenCode config |
 
 ### Gateway
 
@@ -86,7 +86,7 @@ tests/
 | Webhook | Send CLI | ✅ `phronesis send webhook` | Generic JSON POST to any URL |
 | Slack | Send CLI | ✅ `phronesis send slack` | Slack-compatible webhook payload |
 | Discord | Send CLI | ✅ `phronesis send discord` | Discord webhook with "Phronesis" username |
-| Email | AgentMail MCP | ✅ Configured | Remote MCP at `mcp.agentmail.to` (needs API key) |
+| Email | AgentMail MCP | Optional | Requires explicit MCP configuration and credentials |
 | CLI | Native | ✅ Always available | Direct terminal + `phronesis` wrapper |
 
 ## Product Boundary

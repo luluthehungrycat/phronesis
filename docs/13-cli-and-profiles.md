@@ -107,7 +107,7 @@ phronesis migrate
 | `hermes version` | `phronesis version` | Trivial |
 | `hermes model` | `phronesis config get defaults.model` | Use the implemented config command |
 | `hermes cron list\|status` | — | No Phronesis cron command is implemented yet |
-| `hermes tools` | `phronesis plugin list` | Lists the installed Phronesis plugins |
+| `hermes tools` | `phronesis plugin list` | Lists available registry entries; it does not verify installed or registered plugins |
 
 **Not implemented** (Hermes-specific, no analogue):
 - `hermes lsp`, `hermes computer-use` — platform-specific
@@ -464,8 +464,8 @@ curl -fsSL https://raw.githubusercontent.com/luluthehungrycat/phronesis/main/ins
 
 | Item | Status | Action Needed |
 |------|--------|---------------|
-| Telegram notifications | ✅ **Done** — all 7 plugins wired | None |
-| AgentMail MCP | ✅ **Done** — OAuth configured + env var set | None |
+| Telegram notifications | 🔶 Configuration-dependent | Register plugins in the target OpenCode configuration and verify the gateway path |
+| AgentMail MCP | 🔶 Optional | Configure the MCP server and credentials before use |
 | Dogfood | 🔶 Ongoing | Active via Bot 2 |
 | Polish | 🔶 Ongoing | Fix as encountered |
 | CLI scaffold | ✅ **Phase 1a+1b+1c+2+3 complete** | 17 commands: chat, continue, fork, version, config, profile, gateway (status/start/stop/restart/logs/install/uninstall), skills (list/install/update/feedback), sessions (list/search/rebuild), create-plugin, plugin (search/info/list), dashboard, completion, doctor, setup, send, migrate |

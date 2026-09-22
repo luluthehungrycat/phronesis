@@ -18,7 +18,7 @@ Phronesis has delivered all planned Phase 🟢 and Phase 🟡 capabilities:
 - **Structured persona system** with Hermes SOUL.md compatibility (P4)
 - **Local-first memory consolidation** with optional Supermemory push (P5)
 - **Multi-instance Telegram gateway** with 2 bot instances (Phase 🔴 MVP)
-- **AgentMail MCP** configured for email gateway
+- **AgentMail MCP** documented as an optional email integration
 
 The repository contains seven Phronesis plugin packages, covered by behavior and OpenCode compatibility tests. The current workspace `opencode.json` registers `opencode-injection-guard`; the other packages require explicit registration and runtime verification before they can be described as active in a deployed OpenCode server or available through Telegram.
 
@@ -145,7 +145,7 @@ Builds longitudinal user models from session interactions. Tracks communication 
 |----------|-----------|--------|---------|
 | **Telegram** | Bot 1 | ✅ Running | `opencode-telegram.service` — v0.20.1, port 4096 |
 | **Telegram** | Bot 2 | ✅ Running | `opencode-telegram-2.service` — v0.20.1, port 4097 |
-| **Email** | AgentMail MCP | ✅ Configured | `mcp.agentmail.to` remote MCP (needs API key) |
+| **Email** | AgentMail MCP | Optional | `mcp.agentmail.to` remote MCP; requires explicit configuration and credentials |
 | **CLI** | Native | ✅ Always available | Direct terminal |
 
 ### Architecture

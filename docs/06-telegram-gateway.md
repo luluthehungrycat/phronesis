@@ -162,7 +162,7 @@ To activate it, you need:
    - **Build native MCP servers** — One per platform (high effort, full control)
    - **Optional future interoperability** — evaluate a Hermes gateway bridge via MCP/API only after the native Phronesis path is reliable.
    - **Hybrid** — if ever adopted, keep Hermes as an optional message router and OpenCode as the brain; Phronesis must remain independently usable.
-3. **Email bridge** — AgentMail MCP already configured. Next step: define email-handling agent workflow.
+3. **Email bridge** — AgentMail MCP remains optional; configure and verify it before defining an email-handling workflow.
 
 ### Upgrade Path for Telegram Bot
 

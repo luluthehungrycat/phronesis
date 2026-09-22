@@ -18,8 +18,8 @@ CLI ──────→ opencode (TUI) ─────────────
 **Features**: Sessions, models, permissions, files, voice, scheduling, skills, agents  
 **Multi-instance**: Yes — separate bot tokens, shared backend
 
-### ✅ AgentMail (Configured)
-**Status**: MCP server configured but needs API key to activate  
+### 🟡 AgentMail (Optional)
+**Status**: Can be configured as a remote MCP server; activation requires explicit configuration and credentials
 **Connection**: Remote MCP at `https://mcp.agentmail.to/mcp`  
 **Use case**: Email gateway — send emails from OpenCode, receive and process incoming  
 **Auth**: x-api-key header or OAuth
@@ -105,7 +105,7 @@ WhatsApp ──→ Hermes Gateway ──MCP──→ opencode serve
 
 ## Phronesis Integration Points
 
-All gateways automatically benefit from Phronesis:
+Gateways can benefit from Phronesis when the relevant plugins are explicitly registered and verified in the OpenCode server:
 
 | Feature | How Gateway Users Experience It |
 |---------|--------------------------------|
@@ -113,11 +113,11 @@ All gateways automatically benefit from Phronesis:
 | **Session Search** | "Remember when..." prompts auto-trigger search |
 | **Persona** | Each gateway user gets consistent persona |
 | **Memory** | Facts added from any platform persist for all |
-| **Consolidation** | Background extraction runs regardless of entry point |
+| **Consolidation** | Tool-based/heartbeat detection is available when the memory plugin is enabled; scheduler automation remains planned |
 
 ## Recommended Path
 
-1. ✅ **Current**: Telegram (production) + AgentMail (configured)
-2. 🟢 **Next**: Complete Telegram multi-instance setup + activate AgentMail
+1. 🟡 **Current**: Telegram gateway path documented; AgentMail remains optional
+2. 🟢 **Next**: Verify the target OpenCode configuration, complete Telegram multi-instance setup, and activate AgentMail only if needed
 3. 🟡 **After**: Discord adapter (clone telegram-bot pattern)
 4. 🔴 **Later**: Evaluate optional Hermes gateway interoperability for remaining platforms, without making Hermes required

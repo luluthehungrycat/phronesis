@@ -3,7 +3,8 @@
 #
 # Usage: curl -fsSL https://raw.githubusercontent.com/luluthehungrycat/phronesis/main/install.sh | bash
 #
-# Requires: Node.js >= 18, npm, and git (optional: opencode)
+# Requires: Node.js >= 18, npm, and git. OpenCode is required to execute
+# agent sessions, but the CLI can be installed before OpenCode is available.
 
 set -euo pipefail
 
