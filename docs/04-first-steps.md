@@ -1,18 +1,20 @@
 # First Steps — Getting Started with Phronesis
 
-## Immediate Next Actions
+## Development Orientation
+
+The initial plugin prototypes have been implemented and are covered by behavior and OpenCode loader-compatibility tests. Use this page as an orientation for extending the existing system rather than as a list of unfinished prerequisites.
 
 ### Step 1: Explore OpenCode Plugin Architecture
 
-Before writing any code, understand the plugin system that will host all Phronesis capabilities.
+Review the current OpenCode v1.18 plugin contract before changing a plugin.
 
 **Tasks**:
-- [ ] Read the OpenCode plugin development docs (if they exist) or examine existing plugins like `opencode-supermemory` or `opencode-scheduler`
-- [ ] Identify the exact hook signatures: what data is passed to `didExecuteTask`, `didCompleteToolCall`, etc.
-- [ ] Understand the tool registration mechanism (how plugins expose tools to agents)
-- [ ] Look at how `opencode-skillful` discovers and injects SKILL.md files
+- [ ] Read the current OpenCode plugin documentation or inspect the pinned `@opencode-ai/plugin` dependency
+- [ ] Confirm the default export shape (`{ id, server }`) and current hook signatures
+- [ ] Understand the `tool(...)` registration mechanism and permission configuration
+- [ ] Compare the existing seven Phronesis plugins before adding a new capability
 
-**Why**: The entire Phronesis architecture depends on hooking into the right points. Getting this right from the start prevents rewrites.
+**Why**: Phronesis runs on OpenCode's supported loader contract; matching the actual runtime prevents compatibility regressions.
 
 ### Step 2: Inspect Session Database Schema
 
@@ -27,17 +29,14 @@ Find and analyze the SQLite database that stores session data.
 
 **Why**: FTS5 session search (P2) depends entirely on the quality and structure of this data. If it's incomplete or opaque, we may need to augment what gets stored.
 
-### Step 3: Prototype `opencode-skill-creator` (P1)
+### Step 3: Extend `skill-creator` (P1)
 
 This is the highest-priority plugin. Build a minimal proof of concept.
 
 **Tasks**:
-- [ ] Scaffold a new OpenCode plugin (package.json, plugin entry point)
-- [ ] Register `didExecuteTask` hook
-- [ ] Collect basic metrics: tool call count, files modified, errors encountered
-- [ ] When threshold is exceeded, call LLM to generate a SKILL.md draft
-- [ ] Write the draft to `.opencode/skills/<auto-name>/SKILL.md`
-- [ ] Notify user with a summary and offer to review
+- [ ] Review the existing complexity tracking and proposal flow
+- [ ] Add approval, quarantine, and security scanning before any new write behavior
+- [ ] Extend tests for the changed lifecycle
 
 **Minimal viable version**:
 - Hard-coded threshold (≥5 tool calls)
@@ -51,14 +50,12 @@ This is the highest-priority plugin. Build a minimal proof of concept.
 - User feedback loop: "Was this skill useful?" rating
 - Auto-inject relevant skills at session start
 
-### Step 4: Prototype `opencode-session-search` (P2)
+### Step 4: Extend `session-search` (P2)
 
 **Tasks**:
-- [ ] Connect to sessions.db and examine message storage format
-- [ ] Create an FTS5 virtual table indexing message content
-- [ ] Implement a simple search tool: `/search-sessions` with query parameter
-- [ ] Add LLM summarization of top results
-- [ ] Test with real session data
+- [ ] Review the existing sidecar FTS5 index and rebuild path
+- [ ] Add citations, richer filters, and retention controls
+- [ ] Test changes against representative session fixtures
 
 ### Step 5: Connect the Loop
 
@@ -95,7 +92,7 @@ For local development, symlink or point OpenCode config at the local plugin path
 ```json
 // In opencode.jsonc
 {
-  "plugins": [
+  "plugin": [
     // "...",
     "/home/user/phronesis/src/skill-creator"
   ]

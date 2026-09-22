@@ -49,11 +49,11 @@ Priority 2 is the **recommended default** — if you already have a working Tele
 
 ```json
 {
-  "plugins": {
+  "plugin": {
     "file:///home/user/phronesis/src/memory-consolidation": {
       "config": {
-        "botToken": "123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11",
-        "chatId": "8582610783"
+        "botToken": "[TELEGRAM_BOT_TOKEN]",
+        "chatId": "[TELEGRAM_CHAT_ID]"
       }
     }
   }

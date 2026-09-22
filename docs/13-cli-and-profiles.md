@@ -207,12 +207,12 @@ plugins:
   memory-consolidation:
     enabled: true
     config:
-      interval_minutes: 360
+      consolidation_interval_hours: 6
 ```
 
 ### 3.4 Switching Profiles
 
-Switching a profile means:
+Switching a profile means persisting the active profile selection; the command prints export commands for the caller to apply:
 
 1. **Set env vars** for the current session:
    ```bash
@@ -228,7 +228,7 @@ Switching a profile means:
 
 3. **Gateways** read env files from the profile's `gateways/` directory.
 
-The `phronesis profile use <name>` command updates `~/.config/phronesis/config.yaml` (active_profile) and sets env vars for the current shell.
+The `phronesis profile use <name>` command updates `~/.config/phronesis/config.yaml` (`active_profile`) and prints the environment exports. Because a child process cannot modify its caller's shell, source the printed exports or use a profile shorthand script for subsequent commands.
 
 ### 3.5 Profile Shorthand Scripts
 
