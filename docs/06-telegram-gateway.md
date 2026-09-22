@@ -6,7 +6,7 @@ The Telegram gateway is powered by [`@grinev/opencode-telegram-bot`](https://git
 
 - **Stars**: 743 · **Contributors**: 20 · **Releases**: 45 · **Latest**: v0.21.0
 - **License**: MIT
-- **Installed version**: v0.20.1 (global npm, `~/.npm-global/bin/opencode-telegram`)
+- **Example version**: v0.20.1 (deployment must be installed and verified separately)
 
 ---
 

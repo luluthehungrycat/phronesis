@@ -4,7 +4,7 @@
 
 Phronesis uses [@grinev/opencode-telegram-bot](https://github.com/grinev/opencode-telegram-bot) (v0.20.1) as its Telegram gateway. This is a standalone CLI application that connects to OpenCode's HTTP API (`opencode serve`), not an OpenCode plugin — which provides better reliability isolation.
 
-You're running it right now — this very conversation is going through this gateway.
+This document describes an optional deployment pattern; verify the target gateway and OpenCode services before relying on it.
 
 ## Architecture
 

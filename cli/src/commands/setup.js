@@ -54,7 +54,7 @@ export async function handler(argv) {
   const ocAvailable = opencodeAvailable();
   if (!ocAvailable) {
     console.log("  ⚠️  opencode CLI not found in PATH");
-    console.log("     Install opencode first: https://opencode.jan.ai");
+    console.log("     Install OpenCode first: https://github.com/anomalyco/opencode");
     const proceed = await askYesNo("Continue without opencode?", false);
     if (!proceed) {
       console.log("[phronesis] setup cancelled");
@@ -156,7 +156,7 @@ exec phronesis "$@" --profile "${profileName}"
   console.log("Next steps:");
   console.log(`  phronesis doctor          — verify everything works`);
   if (!ocAvailable) {
-    console.log(`  Install opencode          — https://opencode.jan.ai`);
+    console.log(`  Install OpenCode          — https://github.com/anomalyco/opencode`);
   }
   console.log(`  phronesis gateway install — set up Telegram gateway`);
   console.log("");
