@@ -21,6 +21,7 @@ import { getProfileConfig } from "./lib/config.js";
 import { searchSessions, listSessions, rebuildSearchIndex } from "./lib/search.js";
 import { profileDir } from "./lib/paths.js";
 import * as upgradeCmd from "./commands/upgrade.js";
+import * as initCmd from "./commands/init.js";
 import { spinner } from "./lib/spinner.js";
 import { enhanceError } from "./lib/error-helpers.js";
 
@@ -29,7 +30,7 @@ import { enhanceError } from "./lib/error-helpers.js";
  * Extracts the shared --profile / --port / --url flags.
  */
 function opencodeOpts(argv, extra = {}) {
-  return { profile: argv.profile, port: argv.port, url: argv.url, ...extra };
+  return { profile: argv.profile, port: argv.port, url: argv.url, runtimeRoot: argv.runtimeRoot, ...extra };
 }
 
 /**
@@ -39,13 +40,18 @@ function opencodeOpts(argv, extra = {}) {
 function buildCli() {
   return yargs(hideBin(process.argv))
     .scriptName("phronesis")
-    .usage("$0 [--profile <name>] [--port <port>] [--url <url>] <command> [options]")
+    .usage("$0 [--profile <name>] [--runtime-root <path>] [--port <port>] [--url <url>] <command> [options]")
 
     // Global options
     .option("profile", {
       describe: "Use a specific profile",
       type: "string",
       alias: "p",
+    })
+    .option("runtime-root", {
+      describe: "Isolated Phronesis runtime root (default: ~/.phronesis)",
+      type: "string",
+      coerce: (value) => value,
     })
     .option("port", {
       describe: "OpenCode server port (overrides profile config)",
@@ -439,6 +445,7 @@ function buildCli() {
     // Migration (Phase 2)
     .command(migrateCmd)
     .command(upgradeCmd)
+    .command(initCmd)
 
     // Error handling
     .fail((msg, err) => {
