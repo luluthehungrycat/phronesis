@@ -53,7 +53,14 @@ export async function handler(argv) {
     }
   }
 
-  const result = initializeRuntime({ root: argv.root, mode });
+  let result;
+  try {
+    result = initializeRuntime({ root: argv.root, mode });
+  } catch (error) {
+    console.error(`[phronesis] ${error.message}`);
+    process.exitCode = 2;
+    return;
+  }
   if (result.status === "aborted") {
     console.log("[phronesis] Initialization aborted; no managed files were changed.");
     return;

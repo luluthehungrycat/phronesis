@@ -30,7 +30,7 @@ import { enhanceError } from "./lib/error-helpers.js";
  * Extracts the shared --profile / --port / --url flags.
  */
 function opencodeOpts(argv, extra = {}) {
-  return { profile: argv.profile, port: argv.port, url: argv.url, ...extra };
+  return { profile: argv.profile, port: argv.port, url: argv.url, runtimeRoot: argv.runtimeRoot, ...extra };
 }
 
 /**
@@ -40,13 +40,18 @@ function opencodeOpts(argv, extra = {}) {
 function buildCli() {
   return yargs(hideBin(process.argv))
     .scriptName("phronesis")
-    .usage("$0 [--profile <name>] [--port <port>] [--url <url>] <command> [options]")
+    .usage("$0 [--profile <name>] [--runtime-root <path>] [--port <port>] [--url <url>] <command> [options]")
 
     // Global options
     .option("profile", {
       describe: "Use a specific profile",
       type: "string",
       alias: "p",
+    })
+    .option("runtime-root", {
+      describe: "Isolated Phronesis runtime root (default: ~/.phronesis)",
+      type: "string",
+      coerce: (value) => value,
     })
     .option("port", {
       describe: "OpenCode server port (overrides profile config)",

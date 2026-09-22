@@ -7,7 +7,7 @@
  *
  * Run: node tests/test.mjs
  */
-import { readFileSync, writeFileSync, mkdirSync, rmSync, existsSync, mkdtempSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, rmSync, existsSync, mkdtempSync, unlinkSync, symlinkSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
@@ -332,6 +332,17 @@ testAsync("resolveOpenCodeBinary falls back to 'opencode' when not on PATH", asy
   assertEq(opencode.resolveOpenCodeBinary({ locations: [] }), "opencode");
 });
 
+testAsync("resolveOpenCodeEnv honors a custom runtime root", async () => {
+  const opencode = await import("../src/lib/opencode.js");
+  const root = join(TMP_HOME, "custom-runtime");
+  const env = opencode.resolveOpenCodeEnv("default", { runtimeRoot: root });
+  assertEq(env.OPENCODE_CONFIG, join(root, "config", "opencode.jsonc"));
+  assertEq(env.XDG_CONFIG_HOME, join(root, "config"));
+  assertEq(env.XDG_CACHE_HOME, join(root, "cache"));
+  assertEq(env.XDG_STATE_HOME, join(root, "state"));
+  assertEq(env.XDG_DATA_HOME, join(root, "data"));
+});
+
 testAsync("opencodeAvailable returns false when binary missing", async () => {
   const opencode = await import("../src/lib/opencode.js");
   const available = opencode.opencodeAvailable({
@@ -511,6 +522,9 @@ testAsync("init creates missing runtime files under ~/.phronesis", async () => {
   assertEq(env.OPENCODE_CONFIG, join(root, "config", "opencode.jsonc"));
   assertEq(env.OPENCODE_CONFIG_DIR, join(root, "config"));
   assertEq(env.OPENCODE_TUI_CONFIG, join(root, "config", "tui.jsonc"));
+  assertEq(env.XDG_CONFIG_HOME, join(root, "config"));
+  assertEq(env.XDG_CACHE_HOME, join(root, "cache"));
+  assertEq(env.XDG_STATE_HOME, join(root, "state"));
   assertEq(env.XDG_DATA_HOME, join(root, "data"));
 });
 
@@ -548,6 +562,24 @@ testAsync("init reset backs up and replaces existing managed files", async () =>
   assertEq(result.status, "reset");
   assert(readFileSync(configPath, "utf8").includes("Phronesis"), "defaults restored");
   assert(result.backupDir && existsSync(join(result.backupDir, "config", "opencode.jsonc")), "backup created");
+});
+
+testAsync("init reset refuses managed symlinks", async () => {
+  const runtime = await import("../src/lib/runtime.js");
+  const root = join(TMP_HOME, ".phronesis-symlink");
+  runtime.initializeRuntime({ root, mode: "abort" });
+  const external = join(TMP_HOME, "outside-config.jsonc");
+  writeFileSync(external, "{ custom: true }\n", "utf8");
+  unlinkSync(join(root, "config", "opencode.jsonc"));
+  symlinkSync(external, join(root, "config", "opencode.jsonc"));
+  let refused = false;
+  try {
+    runtime.initializeRuntime({ root, mode: "reset" });
+  } catch (error) {
+    refused = error.message.includes("symlink");
+  }
+  assert(refused, "reset refuses symlinked managed files");
+  assertEq(readFileSync(external, "utf8"), "{ custom: true }\n", "external target preserved");
 });
 
 // ─────────────────────────────────────────────────────────────────────────────

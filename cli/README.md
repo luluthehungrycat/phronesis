@@ -72,7 +72,7 @@ Profiles live at `~/.config/phronesis/profiles/<name>/`.
 
 `phronesis init` prepares a separate runtime under `~/.phronesis/`. Phronesis-launched
 OpenCode processes receive `OPENCODE_CONFIG`, `OPENCODE_CONFIG_DIR`,
-`OPENCODE_TUI_CONFIG`, and an isolated `XDG_DATA_HOME`, so normal `opencode`
+`OPENCODE_TUI_CONFIG`, and isolated XDG config/cache/state/data roots, so normal `opencode`
 continues to use its own configuration and data paths.
 
 If managed files already exist, initialization stops and asks whether to:
@@ -83,7 +83,8 @@ If managed files already exist, initialization stops and asks whether to:
 
 Provider configuration inheritance and automatic registration of the core Phronesis
 plugins are subsequent steps; this first slice establishes the non-destructive
-runtime boundary.
+runtime boundary. A custom initialized root can be used for later commands with
+`--runtime-root <path>`.
 
 ## License
 

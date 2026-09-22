@@ -1,6 +1,7 @@
 import {
   copyFileSync,
   existsSync,
+  lstatSync,
   mkdirSync,
   readdirSync,
   writeFileSync,
@@ -16,14 +17,24 @@ const DEFAULT_FILES = new Map([
   ["profiles/default.json", `// Phronesis profile metadata.\n{\n  "name": "default"\n}\n`],
 ]);
 
+function pathExists(path) {
+  try {
+    lstatSync(path);
+    return true;
+  } catch (error) {
+    if (error.code === "ENOENT") return false;
+    throw error;
+  }
+}
+
 function ensureDirectories(root) {
-  for (const relative of ["config", "data", "profiles", "state"]) {
+  for (const relative of ["config", "cache", "data", "profiles", "state"]) {
     mkdirSync(join(root, relative), { recursive: true });
   }
 }
 
 function existingManagedFiles(root) {
-  return [...DEFAULT_FILES.keys()].filter((relative) => existsSync(join(root, relative)));
+  return [...DEFAULT_FILES.keys()].filter((relative) => pathExists(join(root, relative)));
 }
 
 /**
@@ -40,6 +51,17 @@ export function initializeRuntime({ root = DEFAULT_RUNTIME_ROOT, mode = "abort" 
   }
 
   const existing = existingManagedFiles(root);
+  if (existing.length > 0 && mode === "reset") {
+    for (const relative of existing) {
+      const stat = lstatSync(join(root, relative));
+      if (stat.isSymbolicLink()) {
+        throw new Error(`Refusing to reset symlinked managed file: ${relative}`);
+      }
+      if (!stat.isFile()) {
+        throw new Error(`Refusing to reset non-file managed path: ${relative}`);
+      }
+    }
+  }
   if (existing.length > 0 && mode === "abort") {
     return { status: "aborted", root, existing };
   }
@@ -59,7 +81,7 @@ export function initializeRuntime({ root = DEFAULT_RUNTIME_ROOT, mode = "abort" 
   const created = [];
   for (const [relative, content] of DEFAULT_FILES) {
     const target = join(root, relative);
-    if (mode === "reset" || !existsSync(target)) {
+    if (mode === "reset" || !pathExists(target)) {
       mkdirSync(join(target, ".."), { recursive: true });
       writeFileSync(target, content, "utf8");
       created.push(relative);
@@ -76,6 +98,9 @@ export function runtimeEnvironment(root = DEFAULT_RUNTIME_ROOT, baseEnv = proces
     OPENCODE_CONFIG: join(root, "config", "opencode.jsonc"),
     OPENCODE_CONFIG_DIR: join(root, "config"),
     OPENCODE_TUI_CONFIG: join(root, "config", "tui.jsonc"),
+    XDG_CONFIG_HOME: join(root, "config"),
+    XDG_CACHE_HOME: join(root, "cache"),
+    XDG_STATE_HOME: join(root, "state"),
     XDG_DATA_HOME: join(root, "data"),
   };
 }
