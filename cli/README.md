@@ -20,8 +20,11 @@ curl -fsSL https://raw.githubusercontent.com/luluthehungrycat/phronesis/master/i
 # Interactive session (wraps opencode)
 phronesis
 
-# First-run setup wizard
+# First-run setup wizard (legacy profile/gateway setup)
 phronesis setup
+
+# Initialize the isolated OpenCode runtime
+phronesis init
 
 # Check the system
 phronesis doctor
@@ -46,6 +49,7 @@ phronesis doctor
 | `phronesis create-plugin <name>` | Scaffold a new plugin |
 | `phronesis migrate claw\|hermes [--dry-run]` | Migrate from OpenClaw/Hermes |
 | `phronesis setup` | First-run wizard |
+| `phronesis init [--mode=missing\|reset\|abort]` | Initialize isolated OpenCode config/data paths; existing managed files are never silently replaced |
 | `phronesis doctor` | Diagnostics |
 | `phronesis version` | Version info |
 | `phronesis completion [bash\|zsh\|fish]` | Shell completions |
@@ -63,6 +67,23 @@ phronesis --profile work chat "hello"
 ```
 
 Profiles live at `~/.config/phronesis/profiles/<name>/`.
+
+## Isolated OpenCode runtime
+
+`phronesis init` prepares a separate runtime under `~/.phronesis/`. Phronesis-launched
+OpenCode processes receive `OPENCODE_CONFIG`, `OPENCODE_CONFIG_DIR`,
+`OPENCODE_TUI_CONFIG`, and an isolated `XDG_DATA_HOME`, so normal `opencode`
+continues to use its own configuration and data paths.
+
+If managed files already exist, initialization stops and asks whether to:
+
+- initialize only missing files (`--mode=missing`);
+- reset managed files to Phronesis defaults after creating a backup (`--mode=reset`);
+- abort without changing anything (`--mode=abort`).
+
+Provider configuration inheritance and automatic registration of the core Phronesis
+plugins are subsequent steps; this first slice establishes the non-destructive
+runtime boundary.
 
 ## License
 

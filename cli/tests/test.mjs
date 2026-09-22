@@ -492,6 +492,65 @@ testAsync("getProfileConfig returns fallback for missing profile", async () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
+// 9. Isolated runtime initialization
+// ─────────────────────────────────────────────────────────────────────────────
+
+group("isolated runtime initialization");
+
+testAsync("init creates missing runtime files under ~/.phronesis", async () => {
+  const runtime = await import("../src/lib/runtime.js");
+  const root = join(TMP_HOME, ".phronesis");
+  const result = runtime.initializeRuntime({ root, mode: "abort" });
+  assertEq(result.status, "created");
+  assert(existsSync(join(root, "config", "opencode.jsonc")), "OpenCode config created");
+  assert(existsSync(join(root, "config", "tui.jsonc")), "TUI config created");
+  assert(existsSync(join(root, "data")), "data directory created");
+  assert(existsSync(join(root, "profiles")), "profiles directory created");
+  const env = runtime.runtimeEnvironment(root, { KEEP: "yes" });
+  assertEq(env.KEEP, "yes");
+  assertEq(env.OPENCODE_CONFIG, join(root, "config", "opencode.jsonc"));
+  assertEq(env.OPENCODE_CONFIG_DIR, join(root, "config"));
+  assertEq(env.OPENCODE_TUI_CONFIG, join(root, "config", "tui.jsonc"));
+  assertEq(env.XDG_DATA_HOME, join(root, "data"));
+});
+
+testAsync("init aborts without changing existing managed files", async () => {
+  const runtime = await import("../src/lib/runtime.js");
+  const root = join(TMP_HOME, ".phronesis-abort");
+  runtime.initializeRuntime({ root, mode: "abort" });
+  const configPath = join(root, "config", "opencode.jsonc");
+  writeFileSync(configPath, "{\n  custom: true\n}\n", "utf8");
+  const before = readFileSync(configPath, "utf8");
+  const result = runtime.initializeRuntime({ root, mode: "abort" });
+  assertEq(result.status, "aborted");
+  assertEq(readFileSync(configPath, "utf8"), before, "existing file preserved");
+});
+
+testAsync("init missing-only preserves existing files and adds missing files", async () => {
+  const runtime = await import("../src/lib/runtime.js");
+  const root = join(TMP_HOME, ".phronesis-missing");
+  runtime.initializeRuntime({ root, mode: "abort" });
+  const configPath = join(root, "config", "opencode.jsonc");
+  writeFileSync(configPath, "{\n  custom: true\n}\n", "utf8");
+  const result = runtime.initializeRuntime({ root, mode: "missing" });
+  assertEq(result.status, "updated");
+  assertEq(readFileSync(configPath, "utf8"), "{\n  custom: true\n}\n", "existing file preserved");
+  assert(existsSync(join(root, "config", "tui.jsonc")), "missing file added");
+});
+
+testAsync("init reset backs up and replaces existing managed files", async () => {
+  const runtime = await import("../src/lib/runtime.js");
+  const root = join(TMP_HOME, ".phronesis-reset");
+  runtime.initializeRuntime({ root, mode: "abort" });
+  const configPath = join(root, "config", "opencode.jsonc");
+  writeFileSync(configPath, "{\n  custom: true\n}\n", "utf8");
+  const result = runtime.initializeRuntime({ root, mode: "reset" });
+  assertEq(result.status, "reset");
+  assert(readFileSync(configPath, "utf8").includes("Phronesis"), "defaults restored");
+  assert(result.backupDir && existsSync(join(result.backupDir, "config", "opencode.jsonc")), "backup created");
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Run
 // ─────────────────────────────────────────────────────────────────────────────
 

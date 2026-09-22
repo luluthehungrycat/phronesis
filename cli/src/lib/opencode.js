@@ -4,6 +4,7 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 import { profileDir } from "./paths.js";
 import { getActiveProfile, getProfileConfig, getGlobalConfig } from "./config.js";
+import { DEFAULT_RUNTIME_ROOT, runtimeEnvironment } from "./runtime.js";
 
 /**
  * Common locations to check for the opencode binary, beyond PATH.
@@ -48,7 +49,7 @@ export function resolveProfile(profileFlag) {
  *   4. process.env
  */
 function resolveOpenCodeEnv(profileName, opts = {}) {
-  const env = { ...process.env };
+  const env = runtimeEnvironment(opts.runtimeRoot || DEFAULT_RUNTIME_ROOT, process.env);
 
   // Profile directories
   const dir = profileDir(profileName);

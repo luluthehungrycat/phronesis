@@ -21,6 +21,7 @@ import { getProfileConfig } from "./lib/config.js";
 import { searchSessions, listSessions, rebuildSearchIndex } from "./lib/search.js";
 import { profileDir } from "./lib/paths.js";
 import * as upgradeCmd from "./commands/upgrade.js";
+import * as initCmd from "./commands/init.js";
 import { spinner } from "./lib/spinner.js";
 import { enhanceError } from "./lib/error-helpers.js";
 
@@ -439,6 +440,7 @@ function buildCli() {
     // Migration (Phase 2)
     .command(migrateCmd)
     .command(upgradeCmd)
+    .command(initCmd)
 
     // Error handling
     .fail((msg, err) => {
