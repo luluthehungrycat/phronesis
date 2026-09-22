@@ -27,7 +27,7 @@ Add to `opencode.json`:
 
 ```json
 {
-  "plugins": [
+  "plugin": [
     "file:///home/user/phronesis/src/skill-creator",
     "file:///home/user/phronesis/src/session-search",
     "file:///home/user/phronesis/src/persona",

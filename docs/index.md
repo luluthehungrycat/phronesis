@@ -2,7 +2,7 @@
 
 **Practical wisdom from agent experience.**
 
-Phronesis is a standalone CLI product built on [OpenCode](https://github.com/opencode-ai/opencode), with plugins that add adaptive learning capabilities inspired by [Hermes Agent](https://github.com/NousResearch/hermes-agent). The product interface is `phronesis <subcommand> <arguments>`; Phronesis invokes OpenCode underneath rather than merely exposing a loose collection of plugins.
+Phronesis is a standalone CLI product built on [OpenCode](https://github.com/anomalyco/opencode), with plugins that add adaptive learning capabilities inspired by [Hermes Agent](https://github.com/NousResearch/hermes-agent). The product interface is `phronesis <subcommand> <arguments>`; Phronesis invokes OpenCode underneath rather than merely exposing a loose collection of plugins.
 
 Hermes is prior art and a behavioral reference, not a Phronesis runtime dependency. MCP/API interoperability with Hermes is a possible future roadmap item, not a current prerequisite or priority.
 

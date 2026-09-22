@@ -285,7 +285,7 @@ export async function handler(argv) {
       console.log(`\n  Next steps:`);
       console.log(`  1. Register the plugin in your opencode.json:`);
       console.log(`     {`);
-      console.log(`       "plugins": ["file://${installDir}"]`);
+      console.log(`       "plugin": ["file://${installDir}"]`);
       console.log(`     }`);
       console.log(`  2. Reload the opencode server to pick up changes\n`);
       break;
