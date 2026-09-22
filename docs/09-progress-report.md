@@ -3,8 +3,8 @@
 > **Date**: June 2026
 > **Commits**: 12
 > **Tests**: 78/78 passing
-> **Plugins**: 7 deployed
-> **Gateway**: Telegram (2 instances) + AgentMail MCP
+> **Plugins**: 7 packages implemented/tested; explicit registration required
+> **Gateway**: Telegram path documented; AgentMail optional and unconfigured by default
 
 ---
 

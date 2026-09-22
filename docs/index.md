@@ -20,14 +20,14 @@ Hermes is prior art and a behavioral reference, not a Phronesis runtime dependen
 ### Install via npm
 
 ```bash
-npm install -g @phronesis/cli
+npm install -g ./cli
 phronesis --help
 ```
 
 ### Install via install.sh
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/luluthehungrycat/phronesis/main/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/luluthehungrycat/phronesis/master/install.sh | bash
 phronesis --help
 ```
 
@@ -36,8 +36,10 @@ phronesis --help
 ```bash
 git clone https://github.com/luluthehungrycat/phronesis.git
 cd phronesis
+npm install --prefix cli
+npm install -g ./cli
 npm run setup
-./cli/bin/phronesis.js --help
+phronesis --help
 ```
 
 ## Documentation

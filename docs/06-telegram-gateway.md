@@ -93,10 +93,10 @@ The bot provides full Telegram-native interaction with OpenCode:
 - Permission gating respects `opencode.json` rules
 - Session-level and tool-level permission prompts
 
-### Scheduling
-- `/schedule` — create recurring tasks via `opencode-scheduler`
-- `/tasks` — manage scheduled tasks
-- Results delivered to Telegram
+### Scheduling (when configured)
+- `/schedule` — create recurring tasks when an external scheduler is registered
+- `/tasks` — manage scheduled tasks when the gateway/scheduler integration is enabled
+- Result delivery depends on that configured integration; it is not provided by the checked-in Phronesis configuration
 
 ### Advanced
 - **Live tracking** — streaming updates during assistant responses
@@ -136,7 +136,7 @@ The bot delegates LLM interactions to the OpenCode server; plugin availability s
 
 ### Email via AgentMail
 
-AgentMail has been added as an MCP server in `opencode.json`:
+AgentMail is not configured in the checked-in `opencode.json`. Operators may add it as an MCP server when email support is needed:
 
 ```json
 "agentmail": {

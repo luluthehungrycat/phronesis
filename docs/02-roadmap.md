@@ -110,7 +110,7 @@ User query → FTS5 search on sessions.db → Rank results
 ## Phase 🔴: Do Third (1-3 Months)
 
 ### P7: Multi-Platform Gateway
-**Status**: 🟡 Partial; Telegram and AgentMail are integrated, broader native adapters remain planned
+**Status**: 🟡 Partial; Telegram is documented, AgentMail is optional, and broader native adapters remain planned
 **Effort**: 1-2 months  
 **Depends on**: All of Phase 🟢 + 🟡
 
